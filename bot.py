@@ -1,5 +1,5 @@
 import os
-from binance.client import Client
+import requests
 from telegram import (
     Update,
     ReplyKeyboardMarkup,
@@ -17,7 +17,7 @@ from telegram.ext import (
 
 TOKEN = os.getenv("BOT_TOKEN")
 
-client = Client()
+
 user_state = {}
 watchlists = {}
 ADMIN_ID = 7932380565
@@ -63,29 +63,56 @@ def calculate_ema(closes, period):
     return round(ema, 4)
 
 
+COINGECKO_IDS = {
+    "BTCUSDT": "bitcoin",
+    "ETHUSDT": "ethereum",
+    "TONUSDT": "the-open-network",
+    "SOLUSDT": "solana",
+    "BNBUSDT": "binancecoin",
+    "XRPUSDT": "ripple",
+    "DOGEUSDT": "dogecoin",
+    "ADAUSDT": "cardano"
+}
+
+
 def get_market_data(symbol):
-    klines = client.get_klines(symbol=symbol, interval="15m", limit=50)
-    closes = [float(k[4]) for k in klines]
+    coin_id = COINGECKO_IDS.get(symbol)
 
-    price = closes[-1]
-    old_price = closes[-5]
-    change_1h = ((price - old_price) / old_price) * 100
+    if not coin_id:
+        raise Exception("Монета не найдена")
 
-    rsi = calculate_rsi(closes)
-    ema20 = calculate_ema(closes[-30:], 20)
-    ema50 = calculate_ema(closes[-50:], 50)
+    url = f"https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids={coin_id}"
 
-    trend = "BULLISH" if ema20 > ema50 else "BEARISH"
+    response = requests.get(url)
+    data = response.json()[0]
+
+    price = data["current_price"]
+    change_1h = data.get("price_change_percentage_24h", 0)
+
+    high = data["high_24h"]
+    low = data["low_24h"]
+
+    rsi = 50
+    trend = "BULLISH" if change_1h > 0 else "BEARISH"
 
     return price, change_1h, rsi, trend
 
 
 def get_24h_stats(symbol):
-    ticker = client.get_ticker(symbol=symbol)
+    coin_id = COINGECKO_IDS.get(symbol)
+
+    if not coin_id:
+        raise Exception("Монета не найдена")
+
+    url = f"https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids={coin_id}"
+
+    response = requests.get(url)
+    data = response.json()[0]
+
     return {
-        "price": float(ticker["lastPrice"]),
-        "high": float(ticker["highPrice"]),
-        "low": float(ticker["lowPrice"])
+        "price": data["current_price"],
+        "high": data["high_24h"],
+        "low": data["low_24h"]
     }
 
 
