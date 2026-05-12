@@ -1,3 +1,4 @@
+import time
 import os
 import requests
 from telegram import (
@@ -19,6 +20,8 @@ TOKEN = os.getenv("BOT_TOKEN")
 
 
 user_state = {}
+market_cache = {}
+CACHE_SECONDS = 30
 watchlists = {}
 ADMIN_ID = 7932380565
 
@@ -75,22 +78,83 @@ COINGECKO_IDS = {
 }
 
 
-def get_market_data(symbol):
+def get_coingecko_market(symbol):
+    now = time.time()
+
+    if symbol in market_cache:
+        cached = market_cache[symbol]
+        if now - cached["time"] < CACHE_SECONDS:
+            return cached["data"]
+
     coin_id = COINGECKO_IDS.get(symbol)
 
     if not coin_id:
         raise Exception("Монета не найдена")
 
-    url = f"https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids={coin_id}"
+    url = (
+        "https://api.coingecko.com/api/v3/coins/markets"
+        f"?vs_currency=usd&ids={coin_id}"
+    )
 
-    response = requests.get(url)
-    data = response.json()[0]
+    response = requests.get(url, timeout=10)
+
+    if response.status_code != 200:
+        raise Exception("CoinGecko временно не отвечает")
+
+    data_json = response.json()
+
+    if not data_json:
+        raise Exception("CoinGecko вернул пустой ответ")
+
+    data = data_json[0]
+
+    market_cache[symbol] = {
+        "time": now,
+        "data": data
+    }
+
+    def get_coingecko_market(symbol):
+     now = time.time()
+
+    if symbol in market_cache:
+        cached = market_cache[symbol]
+        if now - cached["time"] < CACHE_SECONDS:
+            return cached["data"]
+
+    coin_id = COINGECKO_IDS.get(symbol)
+
+    if not coin_id:
+        raise Exception("Монета не найдена")
+
+    url = (
+        "https://api.coingecko.com/api/v3/coins/markets"
+        f"?vs_currency=usd&ids={coin_id}"
+    )
+
+    response = requests.get(url, timeout=10)
+
+    if response.status_code != 200:
+        raise Exception("CoinGecko временно не отвечает")
+
+    data_json = response.json()
+
+    if not data_json:
+        raise Exception("CoinGecko вернул пустой ответ")
+
+    data = data_json[0]
+
+    market_cache[symbol] = {
+        "time": now,
+        "data": data
+    }
+
+    return data
+
+def get_market_data(symbol):
+    data = get_coingecko_market(symbol)
 
     price = data["current_price"]
     change_1h = data.get("price_change_percentage_24h", 0)
-
-    high = data["high_24h"]
-    low = data["low_24h"]
 
     rsi = 50
     trend = "BULLISH" if change_1h > 0 else "BEARISH"
@@ -99,21 +163,14 @@ def get_market_data(symbol):
 
 
 def get_24h_stats(symbol):
-    coin_id = COINGECKO_IDS.get(symbol)
-
-    if not coin_id:
-        raise Exception("Монета не найдена")
-
-    url = f"https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids={coin_id}"
-
-    response = requests.get(url)
-    data = response.json()[0]
+    data = get_coingecko_market(symbol)
 
     return {
         "price": data["current_price"],
         "high": data["high_24h"],
         "low": data["low_24h"]
     }
+
 
 
 def analyze_symbol(symbol):
