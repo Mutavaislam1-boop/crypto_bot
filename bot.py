@@ -154,6 +154,13 @@ def build_full_analysis(symbol, timeframe):
     stop = support * 0.98
     tp1 = resistance
     tp2 = resistance * 1.04
+    reward = tp1 - price
+    risk = price - stop
+
+    if risk > 0:
+       rr = round(reward / risk, 2)
+    else:
+       rr = 0
 
     buy_count = 0
     sell_count = 0
@@ -215,7 +222,17 @@ def build_full_analysis(symbol, timeframe):
         neutral_count += 1
         resistance_text = "цена почти у сопротивления"
 
-    total_votes = buy_count + sell_count + neutral_count
+    if rr >= 2:
+        buy_count += 1
+        rr_text = "хорошее соотношение риск/прибыль"
+    elif rr >= 1:
+        neutral_count += 1
+        rr_text = "среднее соотношение риск/прибыль"
+    else:
+        sell_count += 1
+        rr_text = "риск выше потенциальной прибыли"
+ 
+        total_votes = buy_count + sell_count + neutral_count
 
     if total_votes == 0:
         buy_score = 5
@@ -300,6 +317,8 @@ Support вывод:
 Resistance вывод:
 {resistance_text}
 
+Risk/Reward вывод:
+{rr_text}
 ━━━━━━━━━━━━━━
 СДЕЛКА
 
@@ -315,6 +334,8 @@ TP1:
 TP2:
 {round(tp2, 4)}
 
+Risk/Reward:
+1:{rr}
 ━━━━━━━━━━━━━━
 TradingView Style
 
