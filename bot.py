@@ -18,7 +18,6 @@ from telegram.ext import (
 
 TOKEN = os.getenv("BOT_TOKEN")
 
-
 user_state = {}
 market_cache = {}
 CACHE_SECONDS = 30
@@ -75,8 +74,118 @@ COINGECKO_IDS = {
     "XRPUSDT": "ripple",
     "DOGEUSDT": "dogecoin",
     "ADAUSDT": "cardano"
-}
+    
+    }
 
+def get_okx_candles(symbol, timeframe="4h", limit=200):
+    inst_id = symbol.replace("USDT", "-USDT")
+
+    tf_map = {
+        "5m": "5m",
+        "15m": "15m",
+        "1h": "1H",
+        "4h": "4H",
+        "1d": "1D",
+        "1w": "1W",
+        "1M": "1M"
+    }
+
+    bar = tf_map.get(timeframe, "4H")
+
+    url = (
+        f"https://www.okx.com/api/v5/market/candles"
+        f"?instId={inst_id}"
+        f"&bar={bar}"
+        f"&limit={limit}"
+    )
+
+    response = requests.get(url, timeout=10)
+    data = response.json()
+
+    if data["code"] != "0":
+        raise Exception("Ошибка получения свечей")
+
+    candles = data["data"]
+
+    closes = [float(c[4]) for c in reversed(candles)]
+
+    return closes
+
+def build_quick_analysis(symbol, timeframe):
+    closes = get_okx_candles(symbol, timeframe)
+
+    price = closes[-1]
+
+    rsi = calculate_rsi(closes)
+    ema20 = calculate_ema(closes, 20)
+    ema50 = calculate_ema(closes, 50)
+    ema200 = calculate_ema(closes, 200)
+
+    rsi_status = "🟢 RSI" if 40 <= rsi <= 65 else "🟡 RSI"
+    ema_status = "🟢 EMA" if ema20 > ema50 else "🔴 EMA"
+    trend_status = "🟢 Trend" if ema20 > ema50 else "🔴 Trend"
+
+    score = 0
+
+    if 40 <= rsi <= 65:
+        score += 2
+
+    if ema20 > ema50:
+        score += 2
+
+    if price > ema200:
+        score += 2
+
+    if ema50 > ema200:
+        score += 2
+
+    if score >= 7:
+        decision = "🟢 ВХОД ВОЗМОЖЕН"
+    elif score >= 4:
+        decision = "🟡 ЛУЧШЕ ЖДАТЬ"
+    else:
+        decision = "🔴 ВХОД ОПАСЕН"
+
+    buy_score = round(score / 8 * 10, 1)
+
+    green_count = int(round(buy_score))
+    score_bar = "🟢" * green_count + "⚪️" * (10 - green_count)
+
+    support = min(closes[-20:])
+    resistance = max(closes[-20:])
+
+    entry_low = support
+    entry_high = price
+    stop = support * 0.985
+    tp1 = resistance
+
+    return f"""
+{symbol} | {timeframe}
+
+{decision}
+
+🟢 BTC        {rsi_status}
+{trend_status}      🟢 MACD
+🟢 Volume     {ema_status}
+🟡 Risk       🟡 OI
+🟡 Whales     🟢 Support
+
+Цена: {round(price, 4)}
+
+RSI: {rsi}
+EMA20: {round(ema20, 4)}
+EMA50: {round(ema50, 4)}
+EMA200: {round(ema200, 4)}
+
+Entry: {round(entry_low, 4)}-{round(entry_high, 4)}
+Stop : {round(stop, 4)}
+TP1  : {round(tp1, 4)}
+
+BUY SCORE
+{buy_score} / 10
+
+{score_bar}
+"""
 
 def get_coingecko_market(symbol):
     now = time.time()
@@ -113,42 +222,8 @@ def get_coingecko_market(symbol):
         "data": data
     }
 
-    def get_coingecko_market(symbol):
-     now = time.time()
-
-    if symbol in market_cache:
-        cached = market_cache[symbol]
-        if now - cached["time"] < CACHE_SECONDS:
-            return cached["data"]
-
-    coin_id = COINGECKO_IDS.get(symbol)
-
-    if not coin_id:
-        raise Exception("Монета не найдена")
-
-    url = (
-        "https://api.coingecko.com/api/v3/coins/markets"
-        f"?vs_currency=usd&ids={coin_id}"
-    )
-
-    response = requests.get(url, timeout=10)
-
-    if response.status_code != 200:
-        raise Exception("CoinGecko временно не отвечает")
-
-    data_json = response.json()
-
-    if not data_json:
-        raise Exception("CoinGecko вернул пустой ответ")
-
-    data = data_json[0]
-
-    market_cache[symbol] = {
-        "time": now,
-        "data": data
-    }
-
     return data
+
 
 def get_market_data(symbol):
     data = get_coingecko_market(symbol)
@@ -170,63 +245,6 @@ def get_24h_stats(symbol):
         "high": data["high_24h"],
         "low": data["low_24h"]
     }
-
-
-
-def analyze_symbol(symbol):
-    price, change_1h, rsi, trend = get_market_data(symbol)
-    btc_price, btc_change_1h, btc_rsi, btc_trend = get_market_data("BTCUSDT")
-
-    risk_score = 0
-    reasons = []
-
-    if rsi > 70:
-        risk_score += 3
-        reasons.append("RSI высокий — монета перегрета")
-
-    if change_1h > 2:
-        risk_score += 2
-        reasons.append("Сильный рост за 1 час — риск позднего входа")
-
-    if trend == "BEARISH":
-        risk_score += 2
-        reasons.append("EMA тренд слабый")
-
-    if btc_change_1h < -0.5:
-        risk_score += 3
-        reasons.append("BTC падает — альты под риском")
-
-    if risk_score >= 6:
-        risk = "HIGH"
-        signal = "НЕ ВХОДИТЬ"
-    elif risk_score >= 3:
-        risk = "MEDIUM"
-        signal = "ЖДАТЬ ОТКАТ"
-    else:
-        risk = "LOW"
-        signal = "МОЖНО ИСКАТЬ ВХОД"
-
-    reasons_text = "\n".join([f"• {r}" for r in reasons]) if reasons else "• Сильных рисков не найдено"
-
-    return f"""
-📊 {symbol}
-
-💰 Цена: {round(price, 4)} USDT
-⏱ Изменение 1ч: {round(change_1h, 2)}%
-📈 RSI: {rsi}
-📊 Trend: {trend}
-
-₿ BTC Filter:
-BTC 1ч: {round(btc_change_1h, 2)}%
-BTC Trend: {btc_trend}
-
-⚠️ Risk: {risk}
-🧠 Risk Score: {risk_score}/10
-🤖 Signal: {signal}
-
-Причины:
-{reasons_text}
-"""
 
 
 def main_keyboard():
@@ -268,6 +286,28 @@ def coin_inline_keyboard(prefix):
     )
 
 
+def timeframe_inline_keyboard(symbol):
+    return InlineKeyboardMarkup(
+        [
+            [
+                InlineKeyboardButton("5m", callback_data=f"TF_{symbol}_5m"),
+                InlineKeyboardButton("15m", callback_data=f"TF_{symbol}_15m")
+            ],
+            [
+                InlineKeyboardButton("1h", callback_data=f"TF_{symbol}_1h"),
+                InlineKeyboardButton("4h", callback_data=f"TF_{symbol}_4h")
+            ],
+            [
+                InlineKeyboardButton("1d", callback_data=f"TF_{symbol}_1d"),
+                InlineKeyboardButton("1w", callback_data=f"TF_{symbol}_1w")
+            ],
+            [
+                InlineKeyboardButton("1M", callback_data=f"TF_{symbol}_1M")
+            ]
+        ]
+    )
+
+
 def info_inline_keyboard():
     return InlineKeyboardMarkup(
         [
@@ -294,15 +334,9 @@ def info_inline_keyboard():
 def watchlist_inline_keyboard():
     return InlineKeyboardMarkup(
         [
-            [
-                InlineKeyboardButton("➕ Добавить монету", callback_data="WL_ADD")
-            ],
-            [
-                InlineKeyboardButton("📋 Мой список", callback_data="WL_LIST")
-            ],
-            [
-                InlineKeyboardButton("❌ Удалить монету", callback_data="WL_REMOVE")
-            ]
+            [InlineKeyboardButton("➕ Добавить монету", callback_data="WL_ADD")],
+            [InlineKeyboardButton("📋 Мой список", callback_data="WL_LIST")],
+            [InlineKeyboardButton("❌ Удалить монету", callback_data="WL_REMOVE")]
         ]
     )
 
@@ -310,12 +344,8 @@ def watchlist_inline_keyboard():
 def help_inline_keyboard():
     return InlineKeyboardMarkup(
         [
-            [
-                InlineKeyboardButton("📚 Инфо", callback_data="HELP_INFO")
-            ],
-            [
-                InlineKeyboardButton("✍️ Оставить отзыв", callback_data="HELP_FEEDBACK")
-            ]
+            [InlineKeyboardButton("📚 Инфо", callback_data="HELP_INFO")],
+            [InlineKeyboardButton("✍️ Оставить отзыв", callback_data="HELP_FEEDBACK")]
         ]
     )
 
@@ -336,15 +366,144 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if data.startswith("ANALYZE_"):
         coin = data.replace("ANALYZE_", "")
-        symbol = coin + "USDT"
-
-        try:
-            reply = analyze_symbol(symbol)
-        except Exception:
-            reply = "❌ Ошибка анализа.\nBinance не ответил или монета не найдена."
 
         await query.message.reply_text(
-            reply,
+            f"Выбран {coin}\n\nВыберите таймфрейм:",
+            reply_markup=timeframe_inline_keyboard(coin)
+        )
+        return
+
+    if data.startswith("TF_"):
+        parts = data.split("_")
+        coin = parts[1]
+        timeframe = parts[2]
+
+        symbol = coin + "USDT"
+
+        quick_text = build_quick_analysis(
+            symbol,
+            timeframe
+        )
+
+        await query.message.reply_text(
+            quick_text,
+            reply_markup=InlineKeyboardMarkup(
+                [
+                    [
+                        InlineKeyboardButton(
+                            "📊 Полный анализ",
+                            callback_data=f"FULL_{coin}_{timeframe}"
+                        )
+                    ]
+                ]
+            )
+        )
+        return
+
+    if data.startswith("FULL_"):
+        parts = data.split("_")
+        coin = parts[1]
+        timeframe = parts[2]
+        symbol = coin + "USDT"
+
+        await query.message.reply_text(
+            f"""
+{symbol} | {timeframe}
+
+━━━━━━━━━━━━━━
+РЕШЕНИЕ
+🟢 ВХОД ВОЗМОЖЕН
+
+━━━━━━━━━━━━━━
+РЫНОК
+
+🟢 BTC Trend
+🟡 BTC Dominance
+🟡 Market Sentiment
+🟢 Liquidity
+
+━━━━━━━━━━━━━━
+ТЕХНИЧЕСКИЙ АНАЛИЗ
+
+🟢 RSI
+🟢 MACD
+🟢 EMA20
+🟢 EMA50
+🔴 EMA200
+🟢 VWAP
+🟡 Bollinger Bands
+🟢 ATR
+
+━━━━━━━━━━━━━━
+СТРУКТУРА РЫНКА
+
+🟢 Higher Highs
+🟢 Higher Lows
+🟡 Resistance Nearby
+🟢 Support Strong
+🟡 Stop Hunt Risk
+
+━━━━━━━━━━━━━━
+ОБЪЁМЫ
+
+🟢 Volume Confirmation
+🟢 Buyers Active
+🟡 Whale Activity
+
+━━━━━━━━━━━━━━
+ДЕРИВАТИВЫ
+
+🟡 Open Interest
+🟡 Funding
+🟡 Long/Short Ratio
+🔴 Liquidation Zone Above
+
+━━━━━━━━━━━━━━
+ОНЧЕЙН
+
+🟡 Accumulation
+🟢 Exchange Outflow
+🟡 Whales Buying
+
+━━━━━━━━━━━━━━
+СДЕЛКА
+
+Entry:
+2.31 - 2.34
+
+Stop:
+2.24
+
+TP1:
+2.45
+
+TP2:
+2.58
+
+Risk/Reward:
+1:3.2
+
+━━━━━━━━━━━━━━
+ВЕРОЯТНОСТИ
+
+Рост:
+68%
+
+Падение:
+32%
+
+━━━━━━━━━━━━━━
+BUY SCORE
+
+8.4 / 10
+
+🟢🟢🟢🟢🟢🟢🟢🟢⚪️⚪️
+
+🚨 Важно:
+Это аналитическая подсказка, не гарантия прибыли.
+
+⚠️ Решение по сделке принимает пользователь.
+""",
             reply_markup=main_keyboard()
         )
         return
@@ -383,9 +542,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
 
         except Exception:
-            await query.message.reply_text(
-                "❌ Ошибка получения данных Binance."
-            )
+            await query.message.reply_text("❌ Ошибка получения данных")
 
         return
 
@@ -423,9 +580,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
 
         except Exception:
-            await query.message.reply_text(
-                "❌ Ошибка получения данных Binance."
-            )
+            await query.message.reply_text("❌ Ошибка получения данных Binance.")
 
         return
 
@@ -933,11 +1088,8 @@ Amount:
                     )
                     return
 
-        symbol = text_upper + "USDT"
-        reply = analyze_symbol(symbol)
-
         await update.message.reply_text(
-            reply,
+            "Для анализа нажми кнопку Анализ и выбери монету.",
             reply_markup=main_keyboard()
         )
 
