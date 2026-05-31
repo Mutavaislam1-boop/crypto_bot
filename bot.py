@@ -111,6 +111,18 @@ def get_okx_candles(symbol, timeframe="4h", limit=200):
 
     return closes
 
+def get_levels(closes):
+   recent = closes[-50:]
+
+   support = sorted(recent)[:5]
+   support = sum(support) / len(support)
+
+   resistance = sorted(recent)[-5:]
+   resistance = sum(resistance) / len(resistance)
+
+   return support, resistance
+
+
 def build_quick_analysis(symbol, timeframe):
     closes = get_okx_candles(symbol, timeframe)
 
@@ -121,43 +133,68 @@ def build_quick_analysis(symbol, timeframe):
     ema50 = calculate_ema(closes, 50)
     ema200 = calculate_ema(closes, 200)
 
-    rsi_status = "🟢 RSI" if 40 <= rsi <= 65 else "🟡 RSI"
-    ema_status = "🟢 EMA" if ema20 > ema50 else "🔴 EMA"
-    trend_status = "🟢 Trend" if ema20 > ema50 else "🔴 Trend"
+    support, resistance = get_levels(closes)
+
+    entry_low = support * 1.005
+    entry_high = support * 1.02
+
+    stop = support * 0.98
+
+    tp1 = resistance
+    tp2 = resistance * 1.04
 
     score = 0
 
-    if 40 <= rsi <= 65:
+    if 45 <= rsi <= 65:
         score += 2
+    elif 35 <= rsi < 45:
+        score += 1
+    elif rsi > 70:
+        score -= 1
 
     if ema20 > ema50:
-        score += 2
-
-    if price > ema200:
         score += 2
 
     if ema50 > ema200:
         score += 2
 
-    if score >= 7:
-        decision = "🟢 ВХОД ВОЗМОЖЕН"
-    elif score >= 4:
-        decision = "🟡 ЛУЧШЕ ЖДАТЬ"
-    else:
-        decision = "🔴 ВХОД ОПАСЕН"
+    if price > ema200:
+        score += 2
 
-    buy_score = round(score / 8 * 10, 1)
+    if price < resistance:
+        score += 1
+
+    if price > support:
+        score += 1
+
+    if score < 0:
+        score = 0
+
+    if score > 10:
+        score = 10
+
+    buy_score = round(score, 1)
 
     green_count = int(round(buy_score))
     score_bar = "🟢" * green_count + "⚪️" * (10 - green_count)
 
-    support = min(closes[-20:])
-    resistance = max(closes[-20:])
+    if buy_score >= 7.5 and rsi < 70:
+        decision = "🟢 ВХОД ВОЗМОЖЕН"
+    elif buy_score >= 5:
+        decision = "🟡 ЛУЧШЕ ЖДАТЬ"
+    else:
+        decision = "🔴 ВХОД ОПАСЕН"
 
-    entry_low = support
-    entry_high = price
-    stop = support * 0.985
-    tp1 = resistance
+    rsi_status = "🟢 RSI" if 45 <= rsi <= 65 else "🟡 RSI"
+    if rsi >= 70:
+        rsi_status = "🔴 RSI"
+
+    ema_status = "🟢 EMA" if ema20 > ema50 and ema50 > ema200 else "🟡 EMA"
+    trend_status = "🟢 Trend" if ema20 > ema50 else "🔴 Trend"
+
+    risk_status = "🟢 Risk" if buy_score >= 7.5 else "🟡 Risk"
+    if rsi >= 70:
+        risk_status = "🔴 Risk"
 
     return f"""
 {symbol} | {timeframe}
@@ -167,7 +204,7 @@ def build_quick_analysis(symbol, timeframe):
 🟢 BTC        {rsi_status}
 {trend_status}      🟢 MACD
 🟢 Volume     {ema_status}
-🟡 Risk       🟡 OI
+{risk_status}       🟡 OI
 🟡 Whales     🟢 Support
 
 Цена: {round(price, 4)}
@@ -177,9 +214,13 @@ EMA20: {round(ema20, 4)}
 EMA50: {round(ema50, 4)}
 EMA200: {round(ema200, 4)}
 
+Support: {round(support, 4)}
+Resistance: {round(resistance, 4)}
+
 Entry: {round(entry_low, 4)}-{round(entry_high, 4)}
 Stop : {round(stop, 4)}
 TP1  : {round(tp1, 4)}
+TP2  : {round(tp2, 4)}
 
 BUY SCORE
 {buy_score} / 10
