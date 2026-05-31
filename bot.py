@@ -178,6 +178,19 @@ def build_full_analysis(symbol, timeframe):
     else:
        rr = 0
 
+    if rr < 1 and price > entry_high:
+      timing_now = "🔴 Сейчас не входить"
+      timing_next = "Ждать откат к Entry или пробой Resistance"
+      entry_condition = "Вход только если цена вернётся в Entry или закрепится выше Resistance"
+    elif rr >= 1 and price <= entry_high:
+       timing_now = "🟢 Вход возможен сейчас"
+       timing_next = "Можно искать точку входа по рынку"
+       entry_condition = "Цена находится в зоне входа"
+    else:
+       timing_now = "🟡 Лучше подождать"
+       timing_next = "Наблюдать 1–2 свечи"
+       entry_condition = "Ждать подтверждения от цены"
+
     buy_count = 0
     sell_count = 0
     neutral_count = 0
@@ -380,6 +393,18 @@ TP2:
 
 Risk/Reward:
 1:{rr}
+
+━━━━━━━━━━━━━━
+ТАЙМИНГ ВХОДА
+
+Сейчас:
+{timing_now}
+
+Через 1–2 часа:
+{timing_next}
+
+Условие входа:
+{entry_condition}
 ━━━━━━━━━━━━━━
 TradingView Style
 
