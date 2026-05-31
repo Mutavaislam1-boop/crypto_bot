@@ -122,6 +122,18 @@ def get_levels(closes):
 
    return support, resistance
 
+def get_btc_trend(timeframe):
+    btc_closes = get_okx_candles("BTCUSDT", timeframe)
+
+    ema20 = calculate_ema(btc_closes, 20)
+    ema50 = calculate_ema(btc_closes, 50)
+
+    if ema20 > ema50:
+        return "🟢 Бычий"
+    elif ema20 < ema50:
+        return "🔴 Медвежий"
+    else:
+        return "🟡 Нейтральный"
 
 def build_full_analysis(symbol, timeframe):
     closes = get_okx_candles(symbol, timeframe)
@@ -134,6 +146,8 @@ def build_full_analysis(symbol, timeframe):
     ema200 = calculate_ema(closes, 200)
 
     support, resistance = get_levels(closes)
+    
+    btc_trend = get_btc_trend(timeframe)
 
     entry_low = support * 1.005
     entry_high = support * 1.02
@@ -230,8 +244,7 @@ def build_full_analysis(symbol, timeframe):
 РЫНОК
 
 BTC Trend:
-пока не подключён
-
+{btc_trend}
 BTC Dominance:
 пока не подключён
 
