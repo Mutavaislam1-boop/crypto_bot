@@ -131,6 +131,29 @@ def get_levels(closes):
 
    return support, resistance
 
+def analyze_volume(volumes):
+    current_volume = volumes[-1]
+    avg_volume = sum(volumes[-20:]) / 20
+
+    if current_volume > avg_volume * 1.5:
+        volume_text = "объём сильно выше среднего"
+        volume_status = "🟢 Volume"
+        volume_signal = "BUY"
+    elif current_volume > avg_volume:
+        volume_text = "объём выше среднего"
+        volume_status = "🟢 Volume"
+        volume_signal = "BUY"
+    elif current_volume < avg_volume * 0.6:
+        volume_text = "объём слабый"
+        volume_status = "🔴 Volume"
+        volume_signal = "SELL"
+    else:
+        volume_text = "объём нейтральный"
+        volume_status = "🟡 Volume"
+        volume_signal = "NEUTRAL"
+
+    return current_volume, avg_volume, volume_text, volume_status, volume_signal
+
 def get_btc_trend(timeframe):
     btc_closes = get_okx_candles("BTCUSDT", timeframe)
 
