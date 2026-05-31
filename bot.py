@@ -261,12 +261,12 @@ def build_full_analysis(symbol, timeframe):
     if rr < 1:
         sell_count += 2
  
-        total_votes = buy_count + sell_count + neutral_count
-
     if price > entry_high * 1.02:
       sell_count += 2
     elif price > entry_high:
       sell_count += 1
+
+      total_votes = buy_count + sell_count + neutral_count
 
     if total_votes == 0:
         buy_score = 5
