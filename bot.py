@@ -116,8 +116,9 @@ def get_okx_candles(symbol, timeframe="4h", limit=200):
     candles = data["data"]
 
     closes = [float(c[4]) for c in reversed(candles)]
+    volumes = [float(c[5]) for c in reversed(candles)]
 
-    return closes
+    return closes, volumes
 
 def get_levels(closes):
    recent = closes[-50:]
@@ -144,7 +145,7 @@ def get_btc_trend(timeframe):
         return "🟡 Нейтральный"
 
 def build_full_analysis(symbol, timeframe):
-    closes = get_okx_candles(symbol, timeframe)
+    closes, volumes = get_okx_candles(symbol, timeframe)
 
     price = closes[-1]
 
