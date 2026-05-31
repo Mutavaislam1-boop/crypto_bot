@@ -179,7 +179,19 @@ def build_full_analysis(symbol, timeframe):
     macd = calculate_macd(closes)
 
     support, resistance = get_levels(closes)
-    
+    current_volume, avg_volume, volume_text, volume_status, volume_signal = analyze_volume(volumes)
+
+    buy_count = 0
+    sell_count = 0
+    neutral_count = 0
+
+    if volume_signal == "BUY":
+        buy_count += 1
+    elif volume_signal == "SELL":
+        sell_count += 1
+    else:
+        neutral_count += 1
+
     btc_trend = get_btc_trend(timeframe)
 
     entry_low = support * 1.005
