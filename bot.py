@@ -374,6 +374,15 @@ MACD:
 MACD вывод:
 {macd_text}
 
+Volume:
+{round(current_volume, 2)}
+
+Avg Volume 20:
+{round(avg_volume, 2)}
+
+Volume вывод:
+{volume_text}
+
 EMA20:
 {round(ema20, 4)}
 
