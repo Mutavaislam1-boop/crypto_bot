@@ -157,6 +157,13 @@ def build_full_analysis(symbol, timeframe):
     reward = tp1 - price
     risk = price - stop
 
+    if price <= entry_high:
+      entry_text = "цена находится в зоне входа"
+    elif price <= entry_high * 1.02:
+      entry_text = "цена немного выше зоны входа"
+    else:
+      entry_text = "цена сильно ушла от точки входа"
+
     if risk > 0:
        rr = round(reward / risk, 2)
     else:
@@ -239,6 +246,11 @@ def build_full_analysis(symbol, timeframe):
         sell_count += 2
  
         total_votes = buy_count + sell_count + neutral_count
+
+    if price > entry_high * 1.02:
+      sell_count += 2
+    elif price > entry_high:
+      sell_count += 1
 
     if total_votes == 0:
         buy_score = 5
@@ -325,6 +337,9 @@ Resistance вывод:
 
 Risk/Reward вывод:
 {rr_text}
+
+Entry вывод:
+{entry_text}
 ━━━━━━━━━━━━━━
 СДЕЛКА
 
