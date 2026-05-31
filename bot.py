@@ -232,6 +232,11 @@ def build_full_analysis(symbol, timeframe):
     else:
         decision = "🟡 ЛУЧШЕ ЖДАТЬ"
 
+    if "🟢" in btc_trend:
+     buy_count += 1
+    else:
+     sell_count += 1
+
     return f"""
 {symbol} | {timeframe}
 
