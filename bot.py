@@ -321,6 +321,9 @@ BUY SCORE
 Решение по сделке принимает пользователь.
 """
 
+def build_quick_analysis(symbol, timeframe):
+    return build_full_analysis(symbol, timeframe)
+
 def get_coingecko_market(symbol):
     now = time.time()
 
