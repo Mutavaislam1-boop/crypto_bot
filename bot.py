@@ -227,10 +227,6 @@ def build_full_analysis(symbol, timeframe):
        timing_next = "Наблюдать 1–2 свечи"
        entry_condition = "Ждать подтверждения от цены"
 
-    buy_count = 0
-    sell_count = 0
-    neutral_count = 0
-
     if rsi < 30:
         buy_count += 1
         rsi_text = "перепроданность, возможен отскок"
