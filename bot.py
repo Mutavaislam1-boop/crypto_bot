@@ -64,6 +64,14 @@ def calculate_ema(closes, period):
 
     return round(ema, 4)
 
+def calculate_macd(closes):
+     ema12 = calculate_ema(closes, 12)
+     ema26 = calculate_ema(closes, 26)
+
+     macd = ema12 - ema26
+
+     return round(macd, 4)
+
 
 COINGECKO_IDS = {
     "BTCUSDT": "bitcoin",
@@ -144,6 +152,7 @@ def build_full_analysis(symbol, timeframe):
     ema20 = calculate_ema(closes, 20)
     ema50 = calculate_ema(closes, 50)
     ema200 = calculate_ema(closes, 200)
+    macd = calculate_macd(closes)
 
     support, resistance = get_levels(closes)
     
@@ -202,6 +211,13 @@ def build_full_analysis(symbol, timeframe):
         neutral_count += 1
         ema_text = "EMA нейтральны"
         trend_text = "нейтральный"
+
+    if macd > 0:
+        buy_count += 1
+        macd_text = "MACD выше нуля — импульс бычий"
+    else:
+        sell_count += 1
+        macd_text = "MACD ниже нуля — импульс медвежий"
 
     if price > ema200:
         buy_count += 1
@@ -301,6 +317,12 @@ RSI:
 {rsi}
 Вывод:
 {rsi_text}
+
+MACD:
+{macd}
+
+MACD вывод:
+{macd_text}
 
 EMA20:
 {round(ema20, 4)}
