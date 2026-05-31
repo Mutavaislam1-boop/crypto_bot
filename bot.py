@@ -231,6 +231,12 @@ def build_full_analysis(symbol, timeframe):
     else:
         sell_count += 1
         rr_text = "риск выше потенциальной прибыли"
+
+    if rr < 1:
+        buy_count = max(0, buy_count - 1)
+
+    if rr < 1:
+        sell_count += 2
  
         total_votes = buy_count + sell_count + neutral_count
 
