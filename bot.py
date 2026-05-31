@@ -123,7 +123,7 @@ def get_levels(closes):
    return support, resistance
 
 
-def build_quick_analysis(symbol, timeframe):
+def build_full_analysis(symbol, timeframe):
     closes = get_okx_candles(symbol, timeframe)
 
     price = closes[-1]
@@ -137,9 +137,7 @@ def build_quick_analysis(symbol, timeframe):
 
     entry_low = support * 1.005
     entry_high = support * 1.02
-
     stop = support * 0.98
-
     tp1 = resistance
     tp2 = resistance * 1.04
 
@@ -147,63 +145,61 @@ def build_quick_analysis(symbol, timeframe):
     sell_count = 0
     neutral_count = 0
 
-    # RSI
     if rsi < 30:
         buy_count += 1
-        rsi_status = "🟢 RSI"
+        rsi_text = "перепроданность, возможен отскок"
     elif rsi > 70:
         sell_count += 1
-        rsi_status = "🔴 RSI"
+        rsi_text = "перекупленность, вход рискованнее"
     elif 45 <= rsi <= 65:
         buy_count += 1
-        rsi_status = "🟢 RSI"
+        rsi_text = "здоровая зона для продолжения движения"
     else:
         neutral_count += 1
-        rsi_status = "🟡 RSI"
+        rsi_text = "нейтральная зона"
 
-    # EMA trend
     if ema20 > ema50 and ema50 > ema200:
         buy_count += 3
-        ema_status = "🟢 EMA"
-        trend_status = "🟢 Trend"
+        ema_text = "EMA20 выше EMA50 и EMA200 — тренд сильный"
+        trend_text = "бычий"
     elif ema20 > ema50:
         buy_count += 2
-        ema_status = "🟢 EMA"
-        trend_status = "🟢 Trend"
+        ema_text = "EMA20 выше EMA50 — краткосрочный тренд сильный"
+        trend_text = "умеренно бычий"
     elif ema20 < ema50:
         sell_count += 2
-        ema_status = "🔴 EMA"
-        trend_status = "🔴 Trend"
+        ema_text = "EMA20 ниже EMA50 — тренд слабый"
+        trend_text = "медвежий"
     else:
         neutral_count += 1
-        ema_status = "🟡 EMA"
-        trend_status = "🟡 Trend"
+        ema_text = "EMA нейтральны"
+        trend_text = "нейтральный"
 
-    # Price vs EMA200
     if price > ema200:
         buy_count += 1
+        ema200_text = "цена выше EMA200"
     else:
         sell_count += 1
+        ema200_text = "цена ниже EMA200"
 
-    # Support / Resistance
     if price > support:
         buy_count += 1
-        support_status = "🟢 Support"
+        support_text = "цена выше зоны поддержки"
     else:
         sell_count += 1
-        support_status = "🔴 Support"
+        support_text = "цена ниже поддержки"
 
     distance_to_resistance = ((resistance - price) / price) * 100
 
     if distance_to_resistance > 3:
         buy_count += 1
-        risk_status = "🟢 Risk"
+        resistance_text = "до сопротивления есть запас движения"
     elif distance_to_resistance > 1:
         neutral_count += 1
-        risk_status = "🟡 Risk"
+        resistance_text = "сопротивление близко"
     else:
         neutral_count += 1
-        risk_status = "🟡 Risk"
+        resistance_text = "цена почти у сопротивления"
 
     total_votes = buy_count + sell_count + neutral_count
 
@@ -225,38 +221,104 @@ def build_quick_analysis(symbol, timeframe):
     return f"""
 {symbol} | {timeframe}
 
+━━━━━━━━━━━━━━
+РЕШЕНИЕ
+
 {decision}
 
-🟢 BTC        {rsi_status}
-{trend_status}      🟡 MACD
-🟢 Volume     {ema_status}
-{risk_status}       🟡 OI
-🟡 Whales     {support_status}
+━━━━━━━━━━━━━━
+РЫНОК
 
-Цена: {round(price, 4)}
+BTC Trend:
+пока не подключён
 
-RSI: {rsi}
-EMA20: {round(ema20, 4)}
-EMA50: {round(ema50, 4)}
-EMA200: {round(ema200, 4)}
+BTC Dominance:
+пока не подключён
 
-Support: {round(support, 4)}
-Resistance: {round(resistance, 4)}
+Market Sentiment:
+пока не подключён
 
-Entry: {round(entry_low, 4)}-{round(entry_high, 4)}
-Stop : {round(stop, 4)}
-TP1  : {round(tp1, 4)}
-TP2  : {round(tp2, 4)}
+━━━━━━━━━━━━━━
+ТЕХНИЧЕСКИЙ АНАЛИЗ
 
-TradingView Style:
-BUY: {buy_count}
-SELL: {sell_count}
-NEUTRAL: {neutral_count}
+Цена:
+{round(price, 4)}
 
+RSI:
+{rsi}
+Вывод:
+{rsi_text}
+
+EMA20:
+{round(ema20, 4)}
+
+EMA50:
+{round(ema50, 4)}
+
+EMA200:
+{round(ema200, 4)}
+
+EMA вывод:
+{ema_text}
+
+EMA200:
+{ema200_text}
+
+Trend:
+{trend_text}
+
+━━━━━━━━━━━━━━
+УРОВНИ
+
+Support:
+{round(support, 4)}
+
+Resistance:
+{round(resistance, 4)}
+
+Support вывод:
+{support_text}
+
+Resistance вывод:
+{resistance_text}
+
+━━━━━━━━━━━━━━
+СДЕЛКА
+
+Entry:
+{round(entry_low, 4)} - {round(entry_high, 4)}
+
+Stop:
+{round(stop, 4)}
+
+TP1:
+{round(tp1, 4)}
+
+TP2:
+{round(tp2, 4)}
+
+━━━━━━━━━━━━━━
+TradingView Style
+
+BUY:
+{buy_count}
+
+SELL:
+{sell_count}
+
+NEUTRAL:
+{neutral_count}
+
+━━━━━━━━━━━━━━
 BUY SCORE
+
 {buy_score} / 10
 
 {score_bar}
+
+Важно:
+Это аналитическая подсказка, не гарантия прибыли.
+Решение по сделке принимает пользователь.
 """
 
 def get_coingecko_market(symbol):
@@ -471,113 +533,20 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
         )
         return
-
+    
     if data.startswith("FULL_"):
         parts = data.split("_")
         coin = parts[1]
         timeframe = parts[2]
         symbol = coin + "USDT"
 
+        full_text = build_full_analysis(symbol, timeframe)
+
         await query.message.reply_text(
-            f"""
-{symbol} | {timeframe}
-
-━━━━━━━━━━━━━━
-РЕШЕНИЕ
-🟢 ВХОД ВОЗМОЖЕН
-
-━━━━━━━━━━━━━━
-РЫНОК
-
-🟢 BTC Trend
-🟡 BTC Dominance
-🟡 Market Sentiment
-🟢 Liquidity
-
-━━━━━━━━━━━━━━
-ТЕХНИЧЕСКИЙ АНАЛИЗ
-
-🟢 RSI
-🟢 MACD
-🟢 EMA20
-🟢 EMA50
-🔴 EMA200
-🟢 VWAP
-🟡 Bollinger Bands
-🟢 ATR
-
-━━━━━━━━━━━━━━
-СТРУКТУРА РЫНКА
-
-🟢 Higher Highs
-🟢 Higher Lows
-🟡 Resistance Nearby
-🟢 Support Strong
-🟡 Stop Hunt Risk
-
-━━━━━━━━━━━━━━
-ОБЪЁМЫ
-
-🟢 Volume Confirmation
-🟢 Buyers Active
-🟡 Whale Activity
-
-━━━━━━━━━━━━━━
-ДЕРИВАТИВЫ
-
-🟡 Open Interest
-🟡 Funding
-🟡 Long/Short Ratio
-🔴 Liquidation Zone Above
-
-━━━━━━━━━━━━━━
-ОНЧЕЙН
-
-🟡 Accumulation
-🟢 Exchange Outflow
-🟡 Whales Buying
-
-━━━━━━━━━━━━━━
-СДЕЛКА
-
-Entry:
-2.31 - 2.34
-
-Stop:
-2.24
-
-TP1:
-2.45
-
-TP2:
-2.58
-
-Risk/Reward:
-1:3.2
-
-━━━━━━━━━━━━━━
-ВЕРОЯТНОСТИ
-
-Рост:
-68%
-
-Падение:
-32%
-
-━━━━━━━━━━━━━━
-BUY SCORE
-
-8.4 / 10
-
-🟢🟢🟢🟢🟢🟢🟢🟢⚪️⚪️
-
-🚨 Важно:
-Это аналитическая подсказка, не гарантия прибыли.
-
-⚠️ Решение по сделке принимает пользователь.
-""",
+            full_text,
             reply_markup=main_keyboard()
         )
+
         return
 
     if data.startswith("CALC_"):
