@@ -143,58 +143,84 @@ def build_quick_analysis(symbol, timeframe):
     tp1 = resistance
     tp2 = resistance * 1.04
 
-    score = 0
+    buy_count = 0
+    sell_count = 0
+    neutral_count = 0
 
-    if 45 <= rsi <= 65:
-        score += 2
-    elif 35 <= rsi < 45:
-        score += 1
+    # RSI
+    if rsi < 30:
+        buy_count += 1
+        rsi_status = "🟢 RSI"
     elif rsi > 70:
-        score -= 1
+        sell_count += 1
+        rsi_status = "🔴 RSI"
+    elif 45 <= rsi <= 65:
+        buy_count += 1
+        rsi_status = "🟢 RSI"
+    else:
+        neutral_count += 1
+        rsi_status = "🟡 RSI"
 
-    if ema20 > ema50:
-        score += 2
+    # EMA trend
+    if ema20 > ema50 and ema50 > ema200:
+        buy_count += 3
+        ema_status = "🟢 EMA"
+        trend_status = "🟢 Trend"
+    elif ema20 > ema50:
+        buy_count += 2
+        ema_status = "🟢 EMA"
+        trend_status = "🟢 Trend"
+    elif ema20 < ema50:
+        sell_count += 2
+        ema_status = "🔴 EMA"
+        trend_status = "🔴 Trend"
+    else:
+        neutral_count += 1
+        ema_status = "🟡 EMA"
+        trend_status = "🟡 Trend"
 
-    if ema50 > ema200:
-        score += 2
-
+    # Price vs EMA200
     if price > ema200:
-        score += 2
+        buy_count += 1
+    else:
+        sell_count += 1
 
-    if price < resistance:
-        score += 1
-
+    # Support / Resistance
     if price > support:
-        score += 1
+        buy_count += 1
+        support_status = "🟢 Support"
+    else:
+        sell_count += 1
+        support_status = "🔴 Support"
 
-    if score < 0:
-        score = 0
+    distance_to_resistance = ((resistance - price) / price) * 100
 
-    if score > 10:
-        score = 10
+    if distance_to_resistance > 3:
+        buy_count += 1
+        risk_status = "🟢 Risk"
+    elif distance_to_resistance > 1:
+        neutral_count += 1
+        risk_status = "🟡 Risk"
+    else:
+        neutral_count += 1
+        risk_status = "🟡 Risk"
 
-    buy_score = round(score, 1)
+    total_votes = buy_count + sell_count + neutral_count
+
+    if total_votes == 0:
+        buy_score = 5
+    else:
+        buy_score = round((buy_count / total_votes) * 10, 1)
 
     green_count = int(round(buy_score))
     score_bar = "🟢" * green_count + "⚪️" * (10 - green_count)
 
-    if buy_score >= 7.5 and rsi < 70:
+    if buy_count > sell_count and buy_score >= 7:
         decision = "🟢 ВХОД ВОЗМОЖЕН"
-    elif buy_score >= 5:
-        decision = "🟡 ЛУЧШЕ ЖДАТЬ"
-    else:
+    elif sell_count > buy_count:
         decision = "🔴 ВХОД ОПАСЕН"
-
-    rsi_status = "🟢 RSI" if 45 <= rsi <= 65 else "🟡 RSI"
-    if rsi >= 70:
-        rsi_status = "🔴 RSI"
-
-    ema_status = "🟢 EMA" if ema20 > ema50 and ema50 > ema200 else "🟡 EMA"
-    trend_status = "🟢 Trend" if ema20 > ema50 else "🔴 Trend"
-
-    risk_status = "🟢 Risk" if buy_score >= 7.5 else "🟡 Risk"
-    if rsi >= 70:
-        risk_status = "🔴 Risk"
+    else:
+        decision = "🟡 ЛУЧШЕ ЖДАТЬ"
 
     return f"""
 {symbol} | {timeframe}
@@ -202,10 +228,10 @@ def build_quick_analysis(symbol, timeframe):
 {decision}
 
 🟢 BTC        {rsi_status}
-{trend_status}      🟢 MACD
+{trend_status}      🟡 MACD
 🟢 Volume     {ema_status}
 {risk_status}       🟡 OI
-🟡 Whales     🟢 Support
+🟡 Whales     {support_status}
 
 Цена: {round(price, 4)}
 
@@ -221,6 +247,11 @@ Entry: {round(entry_low, 4)}-{round(entry_high, 4)}
 Stop : {round(stop, 4)}
 TP1  : {round(tp1, 4)}
 TP2  : {round(tp2, 4)}
+
+TradingView Style:
+BUY: {buy_count}
+SELL: {sell_count}
+NEUTRAL: {neutral_count}
 
 BUY SCORE
 {buy_score} / 10
