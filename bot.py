@@ -102,6 +102,27 @@ def calculate_bollinger_bands(closes, period=20):
 
     return round(upper, 4), round(middle, 4), round(lower, 4)
 
+def calculate_stoch_rsi(closes, rsi_period=14, stoch_period=14):
+    if len(closes) < rsi_period + stoch_period:
+        return 50
+
+    rsi_values = []
+
+    for i in range(rsi_period + 1, len(closes) + 1):
+        rsi_values.append(calculate_rsi(closes[:i], rsi_period))
+
+    recent_rsi = rsi_values[-stoch_period:]
+
+    min_rsi = min(recent_rsi)
+    max_rsi = max(recent_rsi)
+
+    if max_rsi == min_rsi:
+        return 50
+
+    stoch_rsi = ((rsi_values[-1] - min_rsi) / (max_rsi - min_rsi)) * 100
+
+    return round(stoch_rsi, 2)
+
 def calculate_atr(highs, lows, closes, period=14):
     if len(closes) < period + 1:
         return 0
@@ -234,6 +255,7 @@ def build_full_analysis(symbol, timeframe):
     macd, macd_signal, macd_histogram = calculate_macd(closes)
     atr = calculate_atr(highs, lows, closes) 
     bb_upper, bb_middle, bb_lower = calculate_bollinger_bands(closes)
+    stoch_rsi = calculate_stoch_rsi(closes)
 
     support, resistance = get_levels(closes)
     current_volume, avg_volume, volume_text, volume_status, volume_signal = analyze_volume(volumes)
@@ -345,6 +367,7 @@ def build_full_analysis(symbol, timeframe):
     if price >= bb_upper:
         sell_count += 1
         bb_text = "цена у верхней полосы Bollinger — риск локального отката выше"
+
     elif price <= bb_lower:
         buy_count += 1
         bb_text = "цена у нижней полосы Bollinger — возможен локальный отскок"
@@ -354,6 +377,23 @@ def build_full_analysis(symbol, timeframe):
     else:
         neutral_count += 1
         bb_text = "цена ниже средней Bollinger — импульс слабее"
+    if stoch_rsi > 80:
+        sell_count += 1
+        stoch_rsi_text = "Stochastic RSI в зоне перекупленности — риск отката повышен"
+    elif stoch_rsi < 20:
+        buy_count += 1
+        stoch_rsi_text = "Stochastic RSI в зоне перепроданности — возможен локальный отскок"
+    elif 40 <= stoch_rsi <= 60:
+        neutral_count += 1
+        stoch_rsi_text = "Stochastic RSI в нейтральной зоне"
+    elif stoch_rsi > 60:
+        buy_count += 1
+        stoch_rsi_text = "Stochastic RSI выше средней зоны — импульс умеренно бычий"
+    else:
+        neutral_count += 1
+        stoch_rsi_text = "Stochastic RSI ниже средней зоны — импульс слабее"
+
+    
 
     if price > ema200:
         buy_count += 1
@@ -484,6 +524,12 @@ Bollinger Lower:
 
 Bollinger вывод:
 {bb_text}
+
+Stochastic RSI:
+{stoch_rsi}
+
+Stochastic RSI вывод:
+{stoch_rsi_text}
 
 Volume:
 {round(current_volume, 2)}
