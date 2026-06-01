@@ -256,29 +256,29 @@ def build_full_analysis(symbol, timeframe):
     risk = price - stop
 
     if price <= entry_high:
-      entry_text = "цена находится в зоне входа"
+        entry_text = "цена находится в зоне входа"
     elif price <= entry_high * 1.02:
-      entry_text = "цена немного выше зоны входа"
+        entry_text = "цена немного выше зоны входа"
     else:
-      entry_text = "цена сильно ушла от точки входа"
+        entry_text = "цена сильно ушла от точки входа"
 
     if risk > 0:
-       rr = round(reward / risk, 2)
+        rr = round(reward / risk, 2)
     else:
-       rr = 0
+        rr = 0
 
     if rr < 1 and price > entry_high:
-      timing_now = "🔴 Сейчас не входить"
-      timing_next = "Ждать откат к Entry или пробой Resistance"
-      entry_condition = "Вход только если цена вернётся в Entry или закрепится выше Resistance"
+        timing_now = "🔴 Сейчас не входить"
+        timing_next = "Ждать откат к Entry или пробой Resistance"
+        entry_condition = "Вход только если цена вернётся в Entry или закрепится выше Resistance"
     elif rr >= 1 and price <= entry_high:
-       timing_now = "🟢 Вход возможен сейчас"
-       timing_next = "Можно искать точку входа по рынку"
-       entry_condition = "Цена находится в зоне входа"
+        timing_now = "🟢 Вход возможен сейчас"
+        timing_next = "Можно искать точку входа по рынку"
+        entry_condition = "Цена находится в зоне входа"
     else:
-       timing_now = "🟡 Лучше подождать"
-       timing_next = "Наблюдать 1–2 свечи"
-       entry_condition = "Ждать подтверждения от цены"
+        timing_now = "🟡 Лучше подождать"
+        timing_next = "Наблюдать 1–2 свечи"
+        entry_condition = "Ждать подтверждения от цены"
 
     if rsi < 30:
         buy_count += 1
@@ -310,21 +310,21 @@ def build_full_analysis(symbol, timeframe):
         ema_text = "EMA нейтральны"
         trend_text = "нейтральный"
 
-if macd > macd_signal and macd_histogram > 0:
-    buy_count += 2
-    macd_text = "MACD выше Signal, histogram положительная — бычий импульс усиливается"
-elif macd < macd_signal and macd_histogram < 0:
-    sell_count += 2
-    macd_text = "MACD ниже Signal, histogram отрицательная — медвежий импульс усиливается"
-elif macd > 0:
-    buy_count += 1
-    macd_text = "MACD выше нуля, но импульс не подтверждён Signal"
-elif macd < 0:
-       sell_count += 1
-       macd_text = "MACD ниже нуля, но импульс не подтверждён Signal"
-else:
-    neutral_count += 1
-    macd_text = "MACD нейтральный"
+    if macd > macd_signal and macd_histogram > 0:
+        buy_count += 2
+        macd_text = "MACD выше Signal, histogram положительная — бычий импульс усиливается"
+    elif macd < macd_signal and macd_histogram < 0:
+        sell_count += 2
+        macd_text = "MACD ниже Signal, histogram отрицательная — медвежий импульс усиливается"
+    elif macd > 0:
+        buy_count += 1
+        macd_text = "MACD выше нуля, но импульс не подтверждён Signal"
+    elif macd < 0:
+        sell_count += 1
+        macd_text = "MACD ниже нуля, но импульс не подтверждён Signal"
+    else:
+        neutral_count += 1
+        macd_text = "MACD нейтральный"
 
     if price > ema200:
         buy_count += 1
@@ -364,8 +364,6 @@ else:
 
     if rr < 1:
         buy_count = max(0, buy_count - 1)
-
-    if rr < 1:
         sell_count += 2
 
     if price > entry_high * 1.02:
@@ -381,9 +379,9 @@ else:
     total_votes = buy_count + sell_count + neutral_count
 
     if total_votes == 0:
-       buy_score = 5
+        buy_score = 5
     else:
-       buy_score = round((buy_count / total_votes) * 10, 1)
+        buy_score = round((buy_count / total_votes) * 10, 1)
 
     green_count = int(round(buy_score))
     score_bar = "🟢" * green_count + "⚪️" * (10 - green_count)
@@ -394,7 +392,6 @@ else:
         decision = "🔴 ВХОД ОПАСЕН"
     else:
         decision = "🟡 ЛУЧШЕ ЖДАТЬ"
-
 
     return f"""
 {symbol} | {timeframe}
@@ -441,6 +438,9 @@ MACD вывод:
 ATR:
 {atr}
 
+ATR %:
+{round(atr_percent, 2)}%
+
 ATR вывод:
 {atr_text}
 
@@ -452,15 +452,6 @@ Avg Volume 20:
 
 Volume вывод:
 {volume_text}
-
-ATR:
-{atr}
-
-ATR %:
-{round(atr_percent, 2)}%
-
-ATR вывод:
-{atr_text}
 
 EMA20:
 {round(ema20, 4)}
@@ -500,6 +491,7 @@ Risk/Reward вывод:
 
 Entry вывод:
 {entry_text}
+
 ━━━━━━━━━━━━━━
 СДЕЛКА
 
@@ -529,6 +521,7 @@ Risk/Reward:
 
 Условие входа:
 {entry_condition}
+
 ━━━━━━━━━━━━━━
 TradingView Style
 
