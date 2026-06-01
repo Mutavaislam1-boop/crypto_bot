@@ -72,14 +72,23 @@ def calculate_macd(closes):
 
      return round(macd, 4)
 
-def calculate_atr(closes, period=14):
+def calculate_atr(highs, lows, closes, period=14):
     if len(closes) < period + 1:
         return 0
 
     trs = []
 
     for i in range(1, len(closes)):
-        tr = abs(closes[i] - closes[i - 1])
+        high = highs[i]
+        low = lows[i]
+        prev_close = closes[i - 1]
+
+        tr = max(
+            high - low,
+            abs(high - prev_close),
+            abs(low - prev_close)
+        )
+
         trs.append(tr)
 
     atr = sum(trs[-period:]) / period
@@ -125,14 +134,16 @@ def get_okx_candles(symbol, timeframe="4h", limit=200):
     data = response.json()
 
     if data["code"] != "0":
-        raise Exception("Ошибка получения свечей")
+        raise Exception("Ошибка получения свечей OKX")
 
-    candles = data["data"]
+    candles = list(reversed(data["data"]))
 
-    closes = [float(c[4]) for c in reversed(candles)]
-    volumes = [float(c[5]) for c in reversed(candles)]
+    highs = [float(c[2]) for c in candles]
+    lows = [float(c[3]) for c in candles]
+    closes = [float(c[4]) for c in candles]
+    volumes = [float(c[5]) for c in candles]
 
-    return closes, volumes
+    return highs, lows, closes, volumes
 
 def get_levels(closes):
    recent = closes[-50:]
@@ -169,7 +180,7 @@ def analyze_volume(volumes):
     return current_volume, avg_volume, volume_text, volume_status, volume_signal
 
 def get_btc_trend(timeframe):
-    btc_closes = get_okx_candles("BTCUSDT", timeframe)
+    highs, lows, btc_closes, volumes = get_okx_candles("BTCUSDT", timeframe)
 
     ema20 = calculate_ema(btc_closes, 20)
     ema50 = calculate_ema(btc_closes, 50)
@@ -182,7 +193,7 @@ def get_btc_trend(timeframe):
         return "🟡 Нейтральный"
 
 def build_full_analysis(symbol, timeframe):
-    closes, volumes = get_okx_candles(symbol, timeframe)
+    highs, lows, closes, volumes = get_okx_candles(symbol, timeframe)
 
     price = closes[-1]
 
@@ -191,7 +202,7 @@ def build_full_analysis(symbol, timeframe):
     ema50 = calculate_ema(closes, 50)
     ema200 = calculate_ema(closes, 200)
     macd = calculate_macd(closes)
-    atr = calculate_atr(closes)
+    atr = calculate_atr(highs, lows, closes)
 
     support, resistance = get_levels(closes)
     current_volume, avg_volume, volume_text, volume_status, volume_signal = analyze_volume(volumes)
