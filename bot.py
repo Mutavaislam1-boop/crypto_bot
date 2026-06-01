@@ -193,25 +193,24 @@ def build_full_analysis(symbol, timeframe):
     macd = calculate_macd(closes)
     atr = calculate_atr(closes)
 
-    buy_count = 0
-    sell_count = 0
-    neutral_count = 0
-   
-    atr_percent = (atr / price) * 100
-
-if atr_percent > 4:
-    atr_text = "волатильность высокая"
-    neutral_count += 1
-elif atr_percent > 2:
-    atr_text = "волатильность средняя"
-    neutral_count += 1
-else:
-    atr_text = "волатильность низкая"
-    buy_count += 1
-
     support, resistance = get_levels(closes)
     current_volume, avg_volume, volume_text, volume_status, volume_signal = analyze_volume(volumes)
 
+    buy_count = 0
+    sell_count = 0
+    neutral_count = 0
+
+    atr_percent = (atr / price) * 100
+
+    if atr_percent > 4:
+        atr_text = "волатильность высокая"
+        neutral_count += 1
+    elif atr_percent > 2:
+        atr_text = "волатильность средняя"
+        neutral_count += 1
+    else:
+        atr_text = "волатильность низкая"
+        buy_count += 1
 
     if volume_signal == "BUY":
         buy_count += 1
