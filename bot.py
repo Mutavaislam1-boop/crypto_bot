@@ -123,6 +123,27 @@ def calculate_stoch_rsi(closes, rsi_period=14, stoch_period=14):
 
     return round(stoch_rsi, 2)
 
+def calculate_vwap(highs, lows, closes, volumes):
+    if len(closes) == 0 or len(volumes) == 0:
+        return 0
+
+    total_pv = 0
+    total_volume = 0
+
+    for i in range(len(closes)):
+        typical_price = (highs[i] + lows[i] + closes[i]) / 3
+        volume = volumes[i]
+
+        total_pv += typical_price * volume
+        total_volume += volume
+
+    if total_volume == 0:
+        return closes[-1]
+
+    vwap = total_pv / total_volume
+
+    return round(vwap, 4)
+
 def calculate_atr(highs, lows, closes, period=14):
     if len(closes) < period + 1:
         return 0
@@ -256,7 +277,7 @@ def build_full_analysis(symbol, timeframe):
     atr = calculate_atr(highs, lows, closes) 
     bb_upper, bb_middle, bb_lower = calculate_bollinger_bands(closes)
     stoch_rsi = calculate_stoch_rsi(closes)
-
+    vwap = calculate_vwap(highs, lows, closes, volumes)
     support, resistance = get_levels(closes)
     current_volume, avg_volume, volume_text, volume_status, volume_signal = analyze_volume(volumes)
 
@@ -392,6 +413,15 @@ def build_full_analysis(symbol, timeframe):
     else:
         neutral_count += 1
         stoch_rsi_text = "Stochastic RSI ниже средней зоны — импульс слабее"
+    if price > vwap:
+        buy_count += 1
+        vwap_text = "цена выше VWAP — покупатель контролирует рынок"
+    elif price < vwap:
+        sell_count += 1
+        vwap_text = "цена ниже VWAP — продавец контролирует рынок"
+    else:
+        neutral_count += 1
+        vwap_text = "цена около VWAP — баланс спроса и предложения"
 
     
 
@@ -530,6 +560,12 @@ Stochastic RSI:
 
 Stochastic RSI вывод:
 {stoch_rsi_text}
+
+VWAP:
+{vwap}
+
+VWAP вывод:
+{vwap_text}
 
 Volume:
 {round(current_volume, 2)}
