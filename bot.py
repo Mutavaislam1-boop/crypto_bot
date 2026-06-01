@@ -144,6 +144,31 @@ def calculate_vwap(highs, lows, closes, volumes):
 
     return round(vwap, 4)
 
+def calculate_fibonacci_levels(highs, lows):
+    recent_high = max(highs[-100:])
+    recent_low = min(lows[-100:])
+
+    diff = recent_high - recent_low
+
+    if diff == 0:
+        return recent_high, recent_low, 0, 0, 0, 0, 0
+
+    fib_236 = recent_high - diff * 0.236
+    fib_382 = recent_high - diff * 0.382
+    fib_500 = recent_high - diff * 0.5
+    fib_618 = recent_high - diff * 0.618
+    fib_786 = recent_high - diff * 0.786
+
+    return (
+        round(recent_high, 4),
+        round(recent_low, 4),
+        round(fib_236, 4),
+        round(fib_382, 4),
+        round(fib_500, 4),
+        round(fib_618, 4),
+        round(fib_786, 4)
+    )
+
 def calculate_atr(highs, lows, closes, period=14):
     if len(closes) < period + 1:
         return 0
@@ -278,6 +303,7 @@ def build_full_analysis(symbol, timeframe):
     bb_upper, bb_middle, bb_lower = calculate_bollinger_bands(closes)
     stoch_rsi = calculate_stoch_rsi(closes)
     vwap = calculate_vwap(highs, lows, closes, volumes)
+    fib_high, fib_low, fib_236, fib_382, fib_500, fib_618, fib_786 = calculate_fibonacci_levels(highs, lows)
     support, resistance = get_levels(closes)
     current_volume, avg_volume, volume_text, volume_status, volume_signal = analyze_volume(volumes)
 
@@ -422,6 +448,18 @@ def build_full_analysis(symbol, timeframe):
     else:
         neutral_count += 1
         vwap_text = "цена около VWAP — баланс спроса и предложения"
+    if fib_382 <= price <= fib_618:
+        buy_count += 1
+        fib_text = "цена в зоне Fibonacci 0.382–0.618 — нормальная зона отката"
+    elif price > fib_236:
+        neutral_count += 1
+        fib_text = "цена выше Fibonacci 0.236 — актив находится высоко, вход после роста рискованнее"
+    elif price < fib_786:
+        sell_count += 1
+        fib_text = "цена ниже Fibonacci 0.786 — структура слабая"
+    else:
+        neutral_count += 1
+        fib_text = "цена между ключевыми Fibonacci уровнями — сигнал нейтральный"
 
     
 
@@ -566,6 +604,30 @@ VWAP:
 
 VWAP вывод:
 {vwap_text}
+
+Fibonacci High:
+{fib_high}
+
+Fibonacci Low:
+{fib_low}
+
+Fib 0.236:
+{fib_236}
+
+Fib 0.382:
+{fib_382}
+
+Fib 0.5:
+{fib_500}
+
+Fib 0.618:
+{fib_618}
+
+Fib 0.786:
+{fib_786}
+
+Fibonacci вывод:
+{fib_text}
 
 Volume:
 {round(current_volume, 2)}
