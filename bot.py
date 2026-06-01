@@ -309,6 +309,20 @@ def get_btc_trend(timeframe):
         return "🔴 Медвежий"
     else:
         return "🟡 Нейтральный"
+    
+def get_asset_trend(symbol, timeframe):
+    highs, lows, closes, volumes = get_okx_candles(symbol, timeframe)
+
+    ema20 = calculate_ema(closes, 20)
+    ema50 = calculate_ema(closes, 50)
+    ema200 = calculate_ema(closes, 200)
+
+    if ema20 > ema50 and closes[-1] > ema200:
+        return "🟢 Бычий"
+    elif ema20 < ema50 and closes[-1] < ema200:
+        return "🔴 Медвежий"
+    else:
+        return "🟡 Нейтральный"
 
 def build_full_analysis(symbol, timeframe):
     highs, lows, closes, volumes = get_okx_candles(symbol, timeframe)
@@ -352,6 +366,28 @@ def build_full_analysis(symbol, timeframe):
         neutral_count += 1
 
     btc_trend = get_btc_trend(timeframe)
+    trend_1d = get_asset_trend(symbol, "1d")
+    trend_4h = get_asset_trend(symbol, "4h")
+    trend_1h = get_asset_trend(symbol, "1h")
+    
+    bullish_tf = 0
+    bearish_tf = 0
+
+    for tf_trend in [trend_1d, trend_4h, trend_1h]:
+        if "🟢" in tf_trend:
+            bullish_tf += 1
+        elif "🔴" in tf_trend:
+            bearish_tf += 1
+
+    if bullish_tf >= 2:
+        buy_count += 2
+        mtf_text = "большинство старших таймфреймов поддерживают рост"
+    elif bearish_tf >= 2:
+        sell_count += 2
+        mtf_text = "большинство старших таймфреймов указывают на слабость"
+    else:
+        neutral_count += 1
+        mtf_text = "таймфреймы дают смешанный сигнал"
 
     entry_low = support * 1.005
     entry_high = support * 1.02
@@ -564,6 +600,19 @@ def build_full_analysis(symbol, timeframe):
 
 BTC Trend:
 {btc_trend}
+
+Asset Trend 1D:
+{trend_1d}
+
+Asset Trend 4H:
+{trend_4h}
+
+Asset Trend 1H:
+{trend_1h}
+
+MTF вывод:
+{mtf_text}
+
 BTC Dominance:
 пока не подключён
 
