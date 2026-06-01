@@ -570,6 +570,26 @@ def build_full_analysis(symbol, timeframe):
     else:
         sell_count += 1
 
+        consensus_total = buy_count + sell_count + neutral_count
+
+    if consensus_total > 0:
+        bullish_percent = round((buy_count / consensus_total) * 100)
+        bearish_percent = round((sell_count / consensus_total) * 100)
+        neutral_percent = round((neutral_count / consensus_total) * 100)
+    else:
+        bullish_percent = 0
+        bearish_percent = 0
+        neutral_percent = 0
+
+    if bullish_percent > bearish_percent and rr >= 1:
+        consensus_text = "техническая картина умеренно бычья, вход возможен только при подтверждении"
+    elif bullish_percent > bearish_percent and rr < 1:
+        consensus_text = "индикаторы больше за рост, но сделка сейчас некачественная из-за плохого Risk/Reward"
+    elif bearish_percent > bullish_percent:
+        consensus_text = "техническая картина слабая, риск входа повышен"
+    else:
+        consensus_text = "сигналы смешанные, лучше ждать подтверждения"
+
     total_votes = buy_count + sell_count + neutral_count
 
     if total_votes == 0:
@@ -776,6 +796,21 @@ Risk/Reward:
 
 Условие входа:
 {entry_condition}
+
+━━━━━━━━━━━━━━
+TECHNICAL CONSENSUS
+
+Bullish:
+{bullish_percent}%
+
+Bearish:
+{bearish_percent}%
+
+Neutral:
+{neutral_percent}%
+
+Вывод:
+{consensus_text}
 
 ━━━━━━━━━━━━━━
 TradingView Style
