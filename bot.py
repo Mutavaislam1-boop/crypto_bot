@@ -242,16 +242,37 @@ def get_okx_candles(symbol, timeframe="4h", limit=200):
 
     return highs, lows, closes, volumes
 
-def get_levels(closes):
-   recent = closes[-50:]
+def get_levels(highs, lows, closes):
+    recent_highs = highs[-100:]
+    recent_lows = lows[-100:]
+    recent_closes = closes[-100:]
 
-   support = sorted(recent)[:5]
-   support = sum(support) / len(support)
+    current_price = closes[-1]
 
-   resistance = sorted(recent)[-5:]
-   resistance = sum(resistance) / len(resistance)
+    swing_lows = []
+    swing_highs = []
 
-   return support, resistance
+    for i in range(2, len(recent_closes) - 2):
+        if recent_lows[i] < recent_lows[i - 1] and recent_lows[i] < recent_lows[i + 1]:
+            swing_lows.append(recent_lows[i])
+
+        if recent_highs[i] > recent_highs[i - 1] and recent_highs[i] > recent_highs[i + 1]:
+            swing_highs.append(recent_highs[i])
+
+    supports = [level for level in swing_lows if level < current_price]
+    resistances = [level for level in swing_highs if level > current_price]
+
+    if supports:
+        support = max(supports)
+    else:
+        support = min(recent_lows)
+
+    if resistances:
+        resistance = min(resistances)
+    else:
+        resistance = max(recent_highs)
+
+    return round(support, 4), round(resistance, 4)
 
 def analyze_volume(volumes):
     current_volume = volumes[-1]
@@ -304,7 +325,7 @@ def build_full_analysis(symbol, timeframe):
     stoch_rsi = calculate_stoch_rsi(closes)
     vwap = calculate_vwap(highs, lows, closes, volumes)
     fib_high, fib_low, fib_236, fib_382, fib_500, fib_618, fib_786 = calculate_fibonacci_levels(highs, lows)
-    support, resistance = get_levels(closes)
+    support, resistance = get_levels(highs, lows, closes)
     current_volume, avg_volume, volume_text, volume_status, volume_signal = analyze_volume(volumes)
 
     buy_count = 0
