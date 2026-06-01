@@ -837,7 +837,269 @@ BUY SCORE
 """
 
 def build_quick_analysis(symbol, timeframe):
-    return build_full_analysis(symbol, timeframe)
+    highs, lows, closes, volumes = get_okx_candles(symbol, timeframe)
+
+    price = closes[-1]
+
+    rsi = calculate_rsi(closes)
+    ema20 = calculate_ema(closes, 20)
+    ema50 = calculate_ema(closes, 50)
+    ema200 = calculate_ema(closes, 200)
+    macd, macd_signal, macd_histogram = calculate_macd(closes)
+    atr = calculate_atr(highs, lows, closes)
+    bb_upper, bb_middle, bb_lower = calculate_bollinger_bands(closes)
+    stoch_rsi = calculate_stoch_rsi(closes)
+    vwap = calculate_vwap(highs, lows, closes, volumes)
+    fib_high, fib_low, fib_236, fib_382, fib_500, fib_618, fib_786 = calculate_fibonacci_levels(highs, lows)
+
+    support, resistance = get_levels(highs, lows, closes)
+    current_volume, avg_volume, volume_text, volume_status, volume_signal = analyze_volume(volumes)
+
+    btc_trend = get_btc_trend(timeframe)
+    trend_1d = get_asset_trend(symbol, "1d")
+    trend_4h = get_asset_trend(symbol, "4h")
+    trend_1h = get_asset_trend(symbol, "1h")
+
+    buy_count = 0
+    sell_count = 0
+    neutral_count = 0
+
+    # ATR
+    atr_percent = (atr / price) * 100
+    if atr_percent > 4:
+        neutral_count += 1
+    elif atr_percent > 2:
+        neutral_count += 1
+    else:
+        buy_count += 1
+
+    # Volume
+    if volume_signal == "BUY":
+        buy_count += 1
+        volume_short = "Сильный"
+        volume_emoji = "🟢"
+    elif volume_signal == "SELL":
+        sell_count += 1
+        volume_short = "Слабый"
+        volume_emoji = "🔴"
+    else:
+        neutral_count += 1
+        volume_short = "Нейтральный"
+        volume_emoji = "🟡"
+
+    # RSI
+    if rsi < 30:
+        buy_count += 1
+    elif rsi > 70:
+        sell_count += 1
+    elif 45 <= rsi <= 65:
+        buy_count += 1
+    else:
+        neutral_count += 1
+
+    # EMA Trend
+    if ema20 > ema50 and ema50 > ema200:
+        buy_count += 3
+        trend_text = "Бычий"
+        trend_emoji = "🟢"
+    elif ema20 > ema50:
+        buy_count += 2
+        trend_text = "Умеренно бычий"
+        trend_emoji = "🟢"
+    elif ema20 < ema50:
+        sell_count += 2
+        trend_text = "Медвежий"
+        trend_emoji = "🔴"
+    else:
+        neutral_count += 1
+        trend_text = "Нейтральный"
+        trend_emoji = "🟡"
+
+    # MACD
+    if macd > macd_signal and macd_histogram > 0:
+        buy_count += 2
+    elif macd < macd_signal and macd_histogram < 0:
+        sell_count += 2
+    elif macd > 0:
+        buy_count += 1
+    elif macd < 0:
+        sell_count += 1
+    else:
+        neutral_count += 1
+
+    # Bollinger
+    if price >= bb_upper:
+        sell_count += 1
+    elif price <= bb_lower:
+        buy_count += 1
+    elif price > bb_middle:
+        buy_count += 1
+    else:
+        neutral_count += 1
+
+    # Stoch RSI
+    if stoch_rsi > 80:
+        sell_count += 1
+    elif stoch_rsi < 20:
+        buy_count += 1
+    elif stoch_rsi > 60:
+        buy_count += 1
+    else:
+        neutral_count += 1
+
+    # VWAP
+    if price > vwap:
+        buy_count += 1
+    elif price < vwap:
+        sell_count += 1
+    else:
+        neutral_count += 1
+
+    # Fibonacci
+    if fib_382 <= price <= fib_618:
+        buy_count += 1
+    elif price > fib_236:
+        neutral_count += 1
+    elif price < fib_786:
+        sell_count += 1
+    else:
+        neutral_count += 1
+
+    # EMA200
+    if price > ema200:
+        buy_count += 1
+    else:
+        sell_count += 1
+
+    # Support / Resistance / RR
+    entry_low = support * 1.005
+    entry_high = support * 1.02
+    stop = support * 0.98
+    tp1 = resistance
+
+    reward = tp1 - price
+    risk = price - stop
+
+    if risk > 0:
+        rr = round(reward / risk, 2)
+    else:
+        rr = 0
+
+    if rr >= 2:
+        buy_count += 1
+    elif rr >= 1:
+        neutral_count += 1
+    else:
+        sell_count += 3
+
+    if price > entry_high * 1.02:
+        sell_count += 2
+    elif price > entry_high:
+        sell_count += 1
+
+    # BTC
+    if "🟢" in btc_trend:
+        buy_count += 1
+        btc_short = "Бычий"
+        btc_emoji = "🟢"
+    elif "🔴" in btc_trend:
+        sell_count += 1
+        btc_short = "Медвежий"
+        btc_emoji = "🔴"
+    else:
+        neutral_count += 1
+        btc_short = "Нейтральный"
+        btc_emoji = "🟡"
+
+    # MTF
+    bullish_tf = 0
+    bearish_tf = 0
+
+    for tf_trend in [trend_1d, trend_4h, trend_1h]:
+        if "🟢" in tf_trend:
+            bullish_tf += 1
+        elif "🔴" in tf_trend:
+            bearish_tf += 1
+
+    if bullish_tf >= 2:
+        buy_count += 2
+    elif bearish_tf >= 2:
+        sell_count += 2
+    else:
+        neutral_count += 1
+
+    total_votes = buy_count + sell_count + neutral_count
+
+    if total_votes > 0:
+        bullish_percent = round((buy_count / total_votes) * 100)
+        bearish_percent = round((sell_count / total_votes) * 100)
+    else:
+        bullish_percent = 0
+        bearish_percent = 0
+
+    buy_score = round((buy_count / total_votes) * 10, 1) if total_votes > 0 else 5
+
+    if buy_count > sell_count and buy_score >= 7 and rr >= 1:
+        decision = "🟢 Вход возможен"
+    elif sell_count > buy_count:
+        decision = "🔴 Вход опасен"
+    else:
+        decision = "🟡 Ждать"
+
+    if rr < 1 and price > entry_high:
+        timing_now = "🔴 Сейчас не входить"
+    elif rr >= 1 and price <= entry_high:
+        timing_now = "🟢 Вход возможен"
+    else:
+        timing_now = "🟡 Лучше подождать"
+
+    try:
+        market_data = get_coingecko_market(symbol)
+        high_24h = market_data.get("high_24h", max(highs[-24:]))
+        low_24h = market_data.get("low_24h", min(lows[-24:]))
+        change_24h = market_data.get("price_change_percentage_24h", 0)
+    except Exception:
+        high_24h = max(highs[-24:])
+        low_24h = min(lows[-24:])
+        change_24h = 0
+
+    change_emoji = "📈" if change_24h >= 0 else "📉"
+
+    return f"""
+{symbol} | {timeframe.upper()} | Цена: {round(price, 4)}
+
+━━━━━━━━━━━━━━
+
+📊 Объём 24ч
+
+Max: {round(high_24h, 4)}      {change_emoji} {round(change_24h, 2)}%
+Min: {round(low_24h, 4)}
+
+━━━━━━━━━━━━━━
+
+{decision}
+
+{trend_emoji} Тренд: {trend_text}
+
+{btc_emoji} BTC: {btc_short}
+RSI: {rsi}
+
+{volume_emoji} Volume: {volume_short}
+R/R: 1:{rr}
+
+Bull: {bullish_percent}%
+Bear: {bearish_percent}%
+
+Тайминг:
+{timing_now}
+
+━━━━━━━━━━━━━━
+
+🚨 Бот не гарантирует прибыль
+
+⚠️ Все сделки пользователь
+совершает самостоятельно
+"""
 
 def get_coingecko_market(symbol):
     now = time.time()
