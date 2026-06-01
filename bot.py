@@ -72,6 +72,20 @@ def calculate_macd(closes):
 
      return round(macd, 4)
 
+def calculate_atr(closes, period=14):
+    if len(closes) < period + 1:
+        return 0
+
+    trs = []
+
+    for i in range(1, len(closes)):
+        tr = abs(closes[i] - closes[i - 1])
+        trs.append(tr)
+
+    atr = sum(trs[-period:]) / period
+
+    return round(atr, 4)
+
 
 COINGECKO_IDS = {
     "BTCUSDT": "bitcoin",
@@ -177,6 +191,7 @@ def build_full_analysis(symbol, timeframe):
     ema50 = calculate_ema(closes, 50)
     ema200 = calculate_ema(closes, 200)
     macd = calculate_macd(closes)
+    atr = calculate_atr(closes)
 
     support, resistance = get_levels(closes)
     current_volume, avg_volume, volume_text, volume_status, volume_signal = analyze_volume(volumes)
