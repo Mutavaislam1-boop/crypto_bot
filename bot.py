@@ -65,12 +65,27 @@ def calculate_ema(closes, period):
     return round(ema, 4)
 
 def calculate_macd(closes):
-     ema12 = calculate_ema(closes, 12)
-     ema26 = calculate_ema(closes, 26)
+    if len(closes) < 35:
+        return 0, 0, 0
 
-     macd = ema12 - ema26
+    ema12_values = []
+    ema26_values = []
 
-     return round(macd, 4)
+    for i in range(26, len(closes) + 1):
+        part = closes[:i]
+        ema12_values.append(calculate_ema(part, 12))
+        ema26_values.append(calculate_ema(part, 26))
+
+    macd_line_values = [
+        ema12_values[i] - ema26_values[i]
+        for i in range(len(ema26_values))
+    ]
+
+    macd_line = macd_line_values[-1]
+    signal_line = calculate_ema(macd_line_values, 9)
+    histogram = macd_line - signal_line
+
+    return round(macd_line, 4), round(signal_line, 4), round(histogram, 4)
 
 def calculate_atr(highs, lows, closes, period=14):
     if len(closes) < period + 1:
@@ -201,7 +216,7 @@ def build_full_analysis(symbol, timeframe):
     ema20 = calculate_ema(closes, 20)
     ema50 = calculate_ema(closes, 50)
     ema200 = calculate_ema(closes, 200)
-    macd = calculate_macd(closes)
+    macd, macd_signal, macd_histogram = calculate_macd(closes)
     atr = calculate_atr(highs, lows, closes)
 
     support, resistance = get_levels(closes)
@@ -295,12 +310,21 @@ def build_full_analysis(symbol, timeframe):
         ema_text = "EMA нейтральны"
         trend_text = "нейтральный"
 
-    if macd > 0:
-        buy_count += 1
-        macd_text = "MACD выше нуля — импульс бычий"
-    else:
-        sell_count += 1
-        macd_text = "MACD ниже нуля — импульс медвежий"
+if macd > macd_signal and macd_histogram > 0:
+    buy_count += 2
+    macd_text = "MACD выше Signal, histogram положительная — бычий импульс усиливается"
+elif macd < macd_signal and macd_histogram < 0:
+    sell_count += 2
+    macd_text = "MACD ниже Signal, histogram отрицательная — медвежий импульс усиливается"
+elif macd > 0:
+    buy_count += 1
+    macd_text = "MACD выше нуля, но импульс не подтверждён Signal"
+elif macd < 0:
+       sell_count += 1
+       macd_text = "MACD ниже нуля, но импульс не подтверждён Signal"
+else:
+    neutral_count += 1
+    macd_text = "MACD нейтральный"
 
     if price > ema200:
         buy_count += 1
@@ -404,6 +428,12 @@ RSI:
 
 MACD:
 {macd}
+
+MACD Signal:
+{macd_signal}
+
+MACD Histogram:
+{macd_histogram}
 
 MACD вывод:
 {macd_text}
