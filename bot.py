@@ -87,6 +87,21 @@ def calculate_macd(closes):
 
     return round(macd_line, 4), round(signal_line, 4), round(histogram, 4)
 
+def calculate_bollinger_bands(closes, period=20):
+    if len(closes) < period:
+        return closes[-1], closes[-1], closes[-1]
+
+    recent = closes[-period:]
+    middle = sum(recent) / period
+
+    variance = sum((price - middle) ** 2 for price in recent) / period
+    std = variance ** 0.5
+
+    upper = middle + (2 * std)
+    lower = middle - (2 * std)
+
+    return round(upper, 4), round(middle, 4), round(lower, 4)
+
 def calculate_atr(highs, lows, closes, period=14):
     if len(closes) < period + 1:
         return 0
@@ -217,7 +232,8 @@ def build_full_analysis(symbol, timeframe):
     ema50 = calculate_ema(closes, 50)
     ema200 = calculate_ema(closes, 200)
     macd, macd_signal, macd_histogram = calculate_macd(closes)
-    atr = calculate_atr(highs, lows, closes)
+    atr = calculate_atr(highs, lows, closes) 
+    bb_upper, bb_middle, bb_lower = calculate_bollinger_bands(closes)
 
     support, resistance = get_levels(closes)
     current_volume, avg_volume, volume_text, volume_status, volume_signal = analyze_volume(volumes)
@@ -325,6 +341,19 @@ def build_full_analysis(symbol, timeframe):
     else:
         neutral_count += 1
         macd_text = "MACD нейтральный"
+
+    if price >= bb_upper:
+        sell_count += 1
+        bb_text = "цена у верхней полосы Bollinger — риск локального отката выше"
+    elif price <= bb_lower:
+        buy_count += 1
+        bb_text = "цена у нижней полосы Bollinger — возможен локальный отскок"
+    elif price > bb_middle:
+        buy_count += 1
+        bb_text = "цена выше средней Bollinger — структура умеренно бычья"
+    else:
+        neutral_count += 1
+        bb_text = "цена ниже средней Bollinger — импульс слабее"
 
     if price > ema200:
         buy_count += 1
@@ -443,6 +472,18 @@ ATR %:
 
 ATR вывод:
 {atr_text}
+
+Bollinger Upper:
+{bb_upper}
+
+Bollinger Middle:
+{bb_middle}
+
+Bollinger Lower:
+{bb_lower}
+
+Bollinger вывод:
+{bb_text}
 
 Volume:
 {round(current_volume, 2)}
