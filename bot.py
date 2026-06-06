@@ -373,28 +373,29 @@ def detect_bos(highs, lows, closes):
     )
 
 def detect_choch(highs, lows, closes, volumes):
-    recent_highs = highs[-30:]
-    recent_lows = lows[-30:]
+    recent_closes = closes[-12:]
+    recent_lows = lows[-12:]
 
     current_price = closes[-1]
-
-    last_high = max(recent_highs[:-1])
-    last_low = min(recent_lows[:-1])
+    prev_close_high = max(recent_closes[:-1])
+    prev_low = min(recent_lows[:-1])
 
     avg_volume = sum(volumes[-20:]) / 20
     current_volume = volumes[-1]
 
-    if current_price > last_high and current_volume > avg_volume:
+    volume_confirmed = current_volume > avg_volume * 0.9
+
+    if current_price > prev_close_high and volume_confirmed:
         return (
             "🟢 Bullish CHOCH",
-            "цена пробила локальную структуру вверх на повышенном объёме",
+            "цена закрылась выше локальных закрытий, есть ранний признак разворота вверх",
             "BUY"
         )
 
-    elif current_price < last_low and current_volume > avg_volume:
+    elif current_price < prev_low and volume_confirmed:
         return (
             "🔴 Bearish CHOCH",
-            "цена пробила локальную структуру вниз на повышенном объёме",
+            "цена пробила локальную поддержку вниз, есть ранний признак слабости",
             "SELL"
         )
 
