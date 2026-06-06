@@ -944,7 +944,7 @@ def build_full_analysis(symbol, timeframe):
     else:
         sell_count += 1
 
-    if decision == "🔴 NO TRADE":
+    if sell_count >= buy_count + 3 or entry_quality < 40:
         timing_now = "🔴 Сейчас не входить"
         timing_next = "Ждать улучшения структуры рынка или нового сигнала"
         entry_condition = "Вход запрещён, пока итоговое решение NO TRADE"
