@@ -641,7 +641,7 @@ def build_full_analysis(symbol, timeframe):
         reversal_score += 25
 
     if bos_signal == "BUY":
-        reversal_score += 20
+        reversal_score += 15
 
     if macd_histogram > 0:
         reversal_score += 15
