@@ -253,22 +253,39 @@ def get_levels(highs, lows, closes):
     swing_highs = []
 
     for i in range(2, len(recent_closes) - 2):
-        if recent_lows[i] < recent_lows[i - 1] and recent_lows[i] < recent_lows[i + 1]:
+        if (
+            recent_lows[i] < recent_lows[i - 1]
+            and recent_lows[i] < recent_lows[i - 2]
+            and recent_lows[i] < recent_lows[i + 1]
+            and recent_lows[i] < recent_lows[i + 2]
+        ):
             swing_lows.append(recent_lows[i])
 
-        if recent_highs[i] > recent_highs[i - 1] and recent_highs[i] > recent_highs[i + 1]:
+        if (
+            recent_highs[i] > recent_highs[i - 1]
+            and recent_highs[i] > recent_highs[i - 2]
+            and recent_highs[i] > recent_highs[i + 1]
+            and recent_highs[i] > recent_highs[i + 2]
+        ):
             swing_highs.append(recent_highs[i])
 
     supports = [level for level in swing_lows if level < current_price]
     resistances = [level for level in swing_highs if level > current_price]
 
+    supports = sorted(supports, reverse=True)
+    resistances = sorted(resistances)
+
     if supports:
-        support = max(supports)
+        support = supports[0]
     else:
         support = min(recent_lows)
 
-    if resistances:
-        resistance = min(resistances)
+    if len(resistances) >= 3:
+        resistance = resistances[2]
+    elif len(resistances) >= 2:
+        resistance = resistances[1]
+    elif len(resistances) == 1:
+        resistance = resistances[0]
     else:
         resistance = max(recent_highs)
 
