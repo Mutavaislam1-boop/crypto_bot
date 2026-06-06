@@ -1418,6 +1418,106 @@ BUY SCORE
 Решение по сделке принимает пользователь.
 """
 
+def build_scalp_analysis(symbol, timeframe):
+    highs, lows, closes, volumes = get_okx_candles(symbol, timeframe)
+
+    price = closes[-1]
+
+    rsi = calculate_rsi(closes)
+    ema20 = calculate_ema(closes, 20)
+    ema50 = calculate_ema(closes, 50)
+    macd, macd_signal, macd_histogram = calculate_macd(closes)
+    atr = calculate_atr(highs, lows, closes)
+    bb_upper, bb_middle, bb_lower = calculate_bollinger_bands(closes)
+    support, resistance = get_levels(highs, lows, closes)
+    current_volume, avg_volume, volume_text, volume_status, volume_signal = analyze_volume(volumes)
+    relative_strength, relative_strength_text, relative_strength_signal = get_relative_strength(symbol, timeframe)
+
+    scalp_score = 0
+
+    if relative_strength_signal == "BUY":
+        scalp_score += 20
+
+    if volume_signal == "BUY":
+        scalp_score += 20
+    elif volume_signal == "NEUTRAL":
+        scalp_score += 10
+
+    if macd_histogram > 0:
+        scalp_score += 15
+
+    if price > ema20:
+        scalp_score += 15
+
+    if ema20 > ema50:
+        scalp_score += 10
+
+    if 45 <= rsi <= 70:
+        scalp_score += 10
+
+    if price > bb_middle:
+        scalp_score += 10
+
+    if price >= resistance * 0.98:
+        scalp_score -= 25
+
+    scalp_score = max(0, min(100, scalp_score))
+
+    scalp_entry = price
+    scalp_stop = price - (atr * 0.6)
+    scalp_target = price + (atr * 0.9)
+
+    if scalp_score >= 75:
+        scalp_status = "🟢 Скальп возможен"
+    elif scalp_score >= 55:
+        scalp_status = "🟡 Скальп рискованный"
+    else:
+        scalp_status = "🔴 Скальп не стоит брать"
+
+    return f"""
+⚡ СКАЛЬПИНГ | {symbol} | {timeframe}
+
+━━━━━━━━━━━━━━
+
+Статус:
+{scalp_status}
+
+Scalp Score:
+{scalp_score} / 100
+
+Цена:
+{round(price, 4)}
+
+Вход:
+{round(scalp_entry, 4)}
+
+Стоп:
+{round(scalp_stop, 4)}
+
+Цель:
+{round(scalp_target, 4)}
+
+━━━━━━━━━━━━━━
+
+Сила к BTC:
+{relative_strength}
+
+Объём:
+{volume_text}
+
+RSI:
+{round(rsi, 2)}
+
+MACD:
+{"🟢 импульс вверх" if macd_histogram > 0 else "🔴 импульс слабый"}
+
+━━━━━━━━━━━━━━
+
+Важно:
+Скальпинг — высокий риск.
+Работать только малым объёмом.
+"""
+
 def build_quick_analysis(symbol, timeframe):
     highs, lows, closes, volumes = get_okx_candles(symbol, timeframe)
 
