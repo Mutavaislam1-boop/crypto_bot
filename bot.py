@@ -530,6 +530,31 @@ def get_asset_trend(symbol, timeframe):
         return "🔴 Медвежий"
     else:
         return "🟡 Нейтральный"
+    
+def get_relative_strength(symbol, timeframe):
+    if symbol == "BTCUSDT":
+        return "₿ BTC", "это сам Bitcoin, сравнение с BTC не требуется", "NEUTRAL"
+
+    try:
+        asset_highs, asset_lows, asset_closes, asset_volumes = get_okx_candles(symbol, timeframe)
+        btc_highs, btc_lows, btc_closes, btc_volumes = get_okx_candles("BTCUSDT", timeframe)
+
+        asset_change = ((asset_closes[-1] - asset_closes[-24]) / asset_closes[-24]) * 100
+        btc_change = ((btc_closes[-1] - btc_closes[-24]) / btc_closes[-24]) * 100
+
+        difference = asset_change - btc_change
+
+        if difference > 2:
+            return "🟢 Сильнее BTC", f"монета сильнее BTC на {round(difference, 2)}%", "BUY"
+
+        elif difference < -2:
+            return "🔴 Слабее BTC", f"монета слабее BTC на {round(abs(difference), 2)}%", "SELL"
+
+        else:
+            return "🟡 Примерно как BTC", f"движение близко к BTC, разница {round(difference, 2)}%", "NEUTRAL"
+
+    except Exception:
+        return "🟡 Нет данных", "не удалось сравнить монету с BTC", "NEUTRAL"
 
 def build_full_analysis(symbol, timeframe):
     highs, lows, closes, volumes = get_okx_candles(symbol, timeframe)
@@ -561,6 +586,8 @@ def build_full_analysis(symbol, timeframe):
     trend_1d = get_asset_trend(symbol, "1d")
     trend_4h = get_asset_trend(symbol, "4h")
     trend_1h = get_asset_trend(symbol, "1h")
+    
+    relative_strength, relative_strength_text, relative_strength_signal = get_relative_strength(symbol, timeframe)
 
     atr_percent = (atr / price) * 100
 
@@ -1032,6 +1059,12 @@ def build_full_analysis(symbol, timeframe):
 
 BTC Trend:
 {btc_trend}
+
+Relative Strength:
+{relative_strength}
+
+Relative Strength вывод:
+{relative_strength_text}
 
 Asset Trend 1D:
 {trend_1d}
