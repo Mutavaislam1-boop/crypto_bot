@@ -274,6 +274,52 @@ def get_levels(highs, lows, closes):
 
     return round(support, 4), round(resistance, 4)
 
+def analyze_market_structure(highs, lows, closes):
+    recent_highs = highs[-80:]
+    recent_lows = lows[-80:]
+
+    swing_highs = []
+    swing_lows = []
+
+    for i in range(2, len(recent_highs) - 2):
+        if recent_highs[i] > recent_highs[i - 1] and recent_highs[i] > recent_highs[i + 1]:
+            swing_highs.append(recent_highs[i])
+
+        if recent_lows[i] < recent_lows[i - 1] and recent_lows[i] < recent_lows[i + 1]:
+            swing_lows.append(recent_lows[i])
+
+    if len(swing_highs) < 2 or len(swing_lows) < 2:
+        return "🟡 Недостаточно данных", "структура рынка пока не определена", "NEUTRAL"
+
+    last_high = swing_highs[-1]
+    prev_high = swing_highs[-2]
+
+    last_low = swing_lows[-1]
+    prev_low = swing_lows[-2]
+
+    if last_high > prev_high and last_low > prev_low:
+        structure = "🟢 HH + HL"
+        text = "бычья структура: цена формирует higher high и higher low"
+        signal = "BUY"
+    elif last_high < prev_high and last_low < prev_low:
+        structure = "🔴 LH + LL"
+        text = "медвежья структура: цена формирует lower high и lower low"
+        signal = "SELL"
+    elif last_high > prev_high and last_low < prev_low:
+        structure = "🟡 Расширение диапазона"
+        text = "рынок расширяет диапазон, направление пока не подтверждено"
+        signal = "NEUTRAL"
+    elif last_high < prev_high and last_low > prev_low:
+        structure = "🟡 Сжатие диапазона"
+        text = "рынок сжимается, возможен сильный импульс после выхода"
+        signal = "NEUTRAL"
+    else:
+        structure = "🟡 Нейтральная структура"
+        text = "структура рынка смешанная"
+        signal = "NEUTRAL"
+
+    return structure, text, signal
+
 def analyze_volume(volumes):
     current_volume = volumes[-1]
     avg_volume = sum(volumes[-20:]) / 20
@@ -340,6 +386,7 @@ def build_full_analysis(symbol, timeframe):
     vwap = calculate_vwap(highs, lows, closes, volumes)
     fib_high, fib_low, fib_236, fib_382, fib_500, fib_618, fib_786 = calculate_fibonacci_levels(highs, lows)
     support, resistance = get_levels(highs, lows, closes)
+    market_structure, structure_text, structure_signal = analyze_market_structure(highs, lows, closes)
     current_volume, avg_volume, volume_text, volume_status, volume_signal = analyze_volume(volumes)
 
     buy_count = 0
@@ -357,6 +404,13 @@ def build_full_analysis(symbol, timeframe):
     else:
         atr_text = "волатильность низкая"
         buy_count += 1
+
+    if structure_signal == "BUY":
+        buy_count += 2
+    elif structure_signal == "SELL":
+        sell_count += 2
+    else:
+        neutral_count += 1
 
     if volume_signal == "BUY":
         buy_count += 1
@@ -745,6 +799,14 @@ EMA200:
 
 Trend:
 {trend_text}
+
+Market Structure:
+
+{market_structure}
+
+Structure вывод:
+
+{structure_text}
 
 ━━━━━━━━━━━━━━
 УРОВНИ
