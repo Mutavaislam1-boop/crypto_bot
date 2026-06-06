@@ -558,8 +558,6 @@ def build_full_analysis(symbol, timeframe):
     if sell_count > buy_count:
         reversal_score -= 10
 
-    reversal_score = max(0, min(100, reversal_score))
-
     if volume_signal == "BUY":
         buy_count += 1
     elif volume_signal == "SELL":
@@ -590,6 +588,12 @@ def build_full_analysis(symbol, timeframe):
     else:
         neutral_count += 1
         mtf_text = "таймфреймы дают смешанный сигнал"
+
+    if "🔴" in btc_trend:
+
+        reversal_score -= 10
+
+    reversal_score = max(0, min(100, reversal_score))
 
     entry_low = support * 1.005
     entry_high = support * 1.02
