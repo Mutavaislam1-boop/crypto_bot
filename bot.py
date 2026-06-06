@@ -1176,7 +1176,7 @@ def build_quick_analysis(symbol, timeframe):
     else:
         decision = "🟡 Ждать"
 
-    if sell_count > buy_count +3:
+    if sell_count >= buy_count + 3:
         timing_now = "🔴 Сейчас не входить"
         timing_next = "Ждать улучшения структуры рынка"
         entry_condition = "Вход запрещён, пока общий сигнал медвежий"
