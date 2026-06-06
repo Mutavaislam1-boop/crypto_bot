@@ -549,6 +549,20 @@ def build_full_analysis(symbol, timeframe):
     else:
         reversal_text = "разворот пока не подтверждён"
 
+    if volume_signal == "SELL":
+        reversal_score -= 15
+
+    if price < ema200:
+        reversal_score -= 10
+
+    if "🔴" in btc_trend:
+        reversal_score -= 10
+
+    if sell_count > buy_count:
+        reversal_score -= 10
+
+    reversal_score = max(0, min(100, reversal_score))
+
     if volume_signal == "BUY":
         buy_count += 1
     elif volume_signal == "SELL":
