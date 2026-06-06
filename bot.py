@@ -699,7 +699,7 @@ def build_full_analysis(symbol, timeframe):
 
     scalp_score = 0
 
-    if market_phase == "🟡 Recovery":
+    if reversal_score >= 40:
         scalp_score += 20
 
     if bos_signal == "BUY":
