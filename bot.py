@@ -648,6 +648,15 @@ def build_full_analysis(symbol, timeframe):
         neutral_count += 1
         mtf_text = "таймфреймы дают смешанный сигнал"
 
+    if relative_strength_signal == "BUY":
+        buy_count += 1
+
+    elif relative_strength_signal == "SELL":
+        sell_count += 1
+
+    else:
+        neutral_count += 1
+
     entry_low = support * 1.005
     entry_high = support * 1.02
     stop = support * 0.98
