@@ -665,17 +665,59 @@ def build_full_analysis(symbol, timeframe):
     reward = tp1 - price
     risk = price - stop
 
+    if risk > 0:
+
+        rr = round(reward / risk, 2)
+
+    else:
+
+        rr = 0
+
+    entry_quality = 50
+
+    if rr >= 2:
+        entry_quality += 20
+    elif rr >= 1:
+        entry_quality += 10
+    else:
+        entry_quality -= 20
+
+    if price <= entry_high:
+        entry_quality += 20
+    elif price <= entry_high * 1.02:
+        entry_quality += 10
+    else:
+        entry_quality -= 20
+
+    if price > support:
+        entry_quality += 10
+
+    if price >= resistance * 0.98:
+        entry_quality -= 15
+
+    entry_quality = max(0, min(100, entry_quality))
+
+    if entry_quality >= 75:
+        entry_quality_text = "отличная точка входа"
+
+    elif entry_quality >= 60:
+        entry_quality_text = "хорошая точка входа"
+
+    elif entry_quality >= 40:
+        entry_quality_text = "среднее качество входа"
+
+    elif entry_quality >= 20:
+        entry_quality_text = "точка входа слабая"
+
+    else:
+        entry_quality_text = "вход сейчас невыгоден"
+
     if price <= entry_high:
         entry_text = "цена находится в зоне входа"
     elif price <= entry_high * 1.02:
         entry_text = "цена немного выше зоны входа"
     else:
         entry_text = "цена сильно ушла от точки входа"
-
-    if risk > 0:
-        rr = round(reward / risk, 2)
-    else:
-        rr = 0
 
     market_phase, market_phase_text = detect_market_phase(price, ema20, ema50, ema200, rsi, macd_histogram, volume_signal, bos_signal, choch_signal, reversal_score, rr)
 
@@ -1123,6 +1165,12 @@ TP2:
 
 Risk/Reward:
 1:{rr}
+
+Entry Quality:
+{entry_quality} / 100
+
+Entry Quality вывод:
+{entry_quality_text}
 
 ━━━━━━━━━━━━━━
 ТАЙМИНГ ВХОДА
