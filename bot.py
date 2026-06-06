@@ -555,9 +555,6 @@ def build_full_analysis(symbol, timeframe):
     if price < ema200:
         reversal_score -= 10
 
-    if "🔴" in btc_trend:
-        reversal_score -= 10
-
     if sell_count > buy_count:
         reversal_score -= 10
 
