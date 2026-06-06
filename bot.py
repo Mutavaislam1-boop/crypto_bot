@@ -745,6 +745,15 @@ def build_full_analysis(symbol, timeframe):
     elif "🔴" in btc_trend:
         trend_score -= 10
 
+    if macd_histogram > 0:
+        trend_score += 10
+
+    if relative_strength > 0:
+        trend_score += 10
+
+    if choch_signal == "BUY":
+        trend_score += 10
+
     trend_score = max(0, min(100, trend_score))
 
     if trend_score >= 75:
