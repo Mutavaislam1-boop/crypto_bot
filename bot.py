@@ -1897,7 +1897,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             [
                 [
                     InlineKeyboardButton(
-                         "📊 Полный анализ",
+                        "📊 Полный анализ",
                         callback_data=f"FULL_{coin}_{timeframe}"
                     ),
                      InlineKeyboardButton(
