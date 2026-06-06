@@ -1176,25 +1176,25 @@ def build_quick_analysis(symbol, timeframe):
     else:
         decision = "🟡 Ждать"
 
-if sell_count > buy_count:
-    timing_now = "🔴 Сейчас не входить"
-    timing_next = "Ждать улучшения структуры рынка"
-    entry_condition = "Вход запрещён, пока общий сигнал медвежий"
+    if sell_count > buy_count:
+        timing_now = "🔴 Сейчас не входить"
+        timing_next = "Ждать улучшения структуры рынка"
+        entry_condition = "Вход запрещён, пока общий сигнал медвежий"
 
-elif rr < 1 and price > entry_high:
-    timing_now = "🔴 Сейчас не входить"
-    timing_next = "Ждать откат к Entry или пробой Resistance"
-    entry_condition = "Вход только если цена вернётся в Entry или закрепится выше Resistance"
+    elif rr < 1 and price > entry_high:
+        timing_now = "🔴 Сейчас не входить"
+        timing_next = "Ждать откат к Entry или пробой Resistance"
+        entry_condition = "Вход только если цена вернётся в Entry или закрепится выше Resistance"
 
-elif rr >= 1 and price <= entry_high:
-    timing_now = "🟢 Вход возможен сейчас"
-    timing_next = "Можно искать точку входа по рынку"
-    entry_condition = "Цена находится в зоне входа"
+    elif rr >= 1 and price <= entry_high:
+        timing_now = "🟢 Вход возможен сейчас"
+        timing_next = "Можно искать точку входа по рынку"
+        entry_condition = "Цена находится в зоне входа"
 
-else:
-    timing_now = "🟡 Лучше подождать"
-    timing_next = "Наблюдать 1–2 свечи"
-    entry_condition = "Ждать подтверждения от цены"
+    else:
+        timing_now = "🟡 Лучше подождать"
+        timing_next = "Наблюдать 1–2 свечи"
+        entry_condition = "Ждать подтверждения от цены"
 
     try:
         market_data = get_coingecko_market(symbol)
