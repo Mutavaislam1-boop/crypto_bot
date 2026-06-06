@@ -697,6 +697,50 @@ def build_full_analysis(symbol, timeframe):
 
     entry_quality = max(0, min(100, entry_quality))
 
+    scalp_score = 0
+
+    if market_phase == "🟡 Recovery":
+        scalp_score += 20
+
+    if bos_signal == "BUY":
+        scalp_score += 20
+
+    if macd_histogram > 0:
+        scalp_score += 15
+
+    if rsi > 45 and rsi < 70:
+        scalp_score += 10
+
+    if price > bb_middle:
+        scalp_score += 10
+
+    if volume_signal == "BUY":
+        scalp_score += 10
+
+    if rr < 1:
+        scalp_score -= 15
+
+    if price >= resistance * 0.98:
+        scalp_score -= 20
+
+    if "🔴" in btc_trend:
+        scalp_score -= 10
+
+    scalp_score = max(0, min(100, scalp_score))
+
+    scalp_entry = price
+    scalp_stop = price - (atr * 0.6)
+    scalp_target = price + (atr * 0.8)
+
+    if scalp_score >= 70:
+        scalp_text = "скальп-сетап сильный, но вход только с контролем риска"
+    elif scalp_score >= 50:
+        scalp_text = "есть умеренный скальп-сетап"
+    elif scalp_score >= 30:
+        scalp_text = "слабый скальп-сетап, лучше ждать подтверждения"
+    else:
+        scalp_text = "скальп-сетап отсутствует"
+
     if entry_quality >= 75:
         entry_quality_text = "отличная точка входа"
 
@@ -1171,6 +1215,21 @@ Entry Quality:
 
 Entry Quality вывод:
 {entry_quality_text}
+
+Scalp Score:
+{scalp_score} / 100
+
+Scalp Entry:
+{round(scalp_entry, 4)}
+
+Scalp Stop:
+{round(scalp_stop, 4)}
+
+Scalp Target:
+{round(scalp_target, 4)}
+
+Scalp вывод:
+{scalp_text}
 
 ━━━━━━━━━━━━━━
 ТАЙМИНГ ВХОДА
