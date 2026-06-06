@@ -2023,7 +2023,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             reply_markup=main_keyboard()
         )
 
-    return
+        return
 
     if data.startswith("SCALP_"):
         parts = data.split("_")
@@ -2035,6 +2035,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         scalp_text = build_scalp_analysis(symbol, timeframe)
 
         await query.message.reply_text(scalp_text)
+        
         return
 
     if data.startswith("CALC_"):
