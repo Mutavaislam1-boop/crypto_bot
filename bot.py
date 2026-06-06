@@ -753,6 +753,19 @@ def build_full_analysis(symbol, timeframe):
 
     trend_score = max(0, min(100, trend_score))
 
+    if macd_histogram > 0:
+        trend_score += 10
+    else:
+        trend_score -= 10
+
+    if relative_strength_signal == "BUY":
+        trend_score += 10
+    elif relative_strength_signal == "SELL":
+        trend_score -= 10
+
+    if choch_signal == "BUY":
+        trend_score += 10
+
     if trend_score >= 75:
         trend_score_text = "сильный бычий тренд"
     elif trend_score >= 55:
