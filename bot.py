@@ -1925,6 +1925,18 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     return
 
+    if data.startswith("SCALP_"):
+        parts = data.split("_")
+        coin = parts[1]
+        timeframe = parts[2]
+
+        symbol = coin + "USDT"
+
+        scalp_text = build_scalp_analysis(symbol, timeframe)
+
+        await query.message.reply_text(scalp_text)
+        return
+
     if data.startswith("CALC_"):
         coin = data.replace("CALC_", "")
         symbol = coin + "USDT"
