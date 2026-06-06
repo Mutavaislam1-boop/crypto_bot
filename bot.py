@@ -372,48 +372,37 @@ def detect_bos(highs, lows, closes):
         "NEUTRAL"
     )
 
-def detect_choch(highs, lows, closes):
-    recent_highs = highs[-60:]
-    recent_lows = lows[-60:]
+def detect_choch(highs, lows, closes, volumes):
+    recent_highs = highs[-30:]
+    recent_lows = lows[-30:]
+
     current_price = closes[-1]
 
-    swing_highs = []
-    swing_lows = []
+    last_high = max(recent_highs[:-1])
+    last_low = min(recent_lows[:-1])
 
-    for i in range(2, len(recent_highs) - 2):
-        if recent_highs[i] > recent_highs[i - 1] and recent_highs[i] > recent_highs[i + 1]:
-            swing_highs.append(recent_highs[i])
+    avg_volume = sum(volumes[-20:]) / 20
+    current_volume = volumes[-1]
 
-        if recent_lows[i] < recent_lows[i - 1] and recent_lows[i] < recent_lows[i + 1]:
-            swing_lows.append(recent_lows[i])
-
-    if len(swing_highs) < 2 or len(swing_lows) < 2:
-        return "🟡 Нет CHOCH", "недостаточно структуры для определения CHOCH", "NEUTRAL"
-
-    last_high = swing_highs[-1]
-    prev_high = swing_highs[-2]
-
-    last_low = swing_lows[-1]
-    prev_low = swing_lows[-2]
-
-    bearish_structure = last_high < prev_high and last_low < prev_low
-    bullish_structure = last_high > prev_high and last_low > prev_low
-
-    if bearish_structure and current_price > last_high:
+    if current_price > last_high and current_volume > avg_volume:
         return (
             "🟢 Bullish CHOCH",
-            "появился ранний признак смены медвежьей структуры вверх",
+            "цена пробила локальную структуру вверх на повышенном объёме",
             "BUY"
         )
 
-    if bullish_structure and current_price < last_low:
+    elif current_price < last_low and current_volume > avg_volume:
         return (
             "🔴 Bearish CHOCH",
-            "появился ранний признак смены бычьей структуры вниз",
+            "цена пробила локальную структуру вниз на повышенном объёме",
             "SELL"
         )
 
-    return "🟡 Нет CHOCH", "ранней смены характера движения пока нет", "NEUTRAL"
+    return (
+        "🟡 Нет CHOCH",
+        "ранней смены характера движения пока нет",
+        "NEUTRAL"
+    )
 
 def analyze_volume(volumes):
     current_volume = volumes[-1]
@@ -483,7 +472,7 @@ def build_full_analysis(symbol, timeframe):
     support, resistance = get_levels(highs, lows, closes)
     market_structure, structure_text, structure_signal = analyze_market_structure(highs, lows, closes)
     bos_text, bos_description, bos_signal = detect_bos(highs, lows, closes)
-    choch_text, choch_description, choch_signal = detect_choch(highs, lows, closes)
+    choch_text, choch_description, choch_signal = detect_choch(highs, lows, closes, volumes)
     current_volume, avg_volume, volume_text, volume_status, volume_signal = analyze_volume(volumes)
 
     buy_count = 0
