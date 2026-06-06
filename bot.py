@@ -1895,22 +1895,23 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
         await query.message.reply_text(
-            quick_text,
-            reply_markup=InlineKeyboardMarkup(
-    [
+    quick_text,
+    reply_markup=InlineKeyboardMarkup(
         [
-            InlineKeyboardButton(
-                "📊 Полный анализ",
-                callback_data=f"FULL_{coin}_{timeframe}"
-            ),
-            InlineKeyboardButton(
-                "⚡ Скальпинг",
-                callback_data=f"SCALP_{coin}_{timeframe}"
-            )
+            [
+                InlineKeyboardButton(
+                    "📊 Полный анализ",
+                    callback_data=f"FULL_{coin}_{timeframe}"
+                ),
+                InlineKeyboardButton(
+                    "⚡ Скальпинг",
+                    callback_data=f"SCALP_{coin}_{timeframe}"
+                )
+            ]
         ]
-    ]
+    )
 )
-        return
+    return
     
     if data.startswith("FULL_"):
         parts = data.split("_")
