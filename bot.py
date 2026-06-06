@@ -1910,7 +1910,6 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return
        
-    
     if data.startswith("FULL_"):
         parts = data.split("_")
         coin = parts[1]
