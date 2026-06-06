@@ -600,21 +600,21 @@ def build_full_analysis(symbol, timeframe):
         reversal_score += 5
 
     if "🔴" in btc_trend:
-       reversal_score -= 10
+        reversal_score -= 10
 
-reversal_score = max(0, min(100, reversal_score))
+        reversal_score = max(0, min(100, reversal_score))
 
-if reversal_score >= 70:
-    reversal_text = "сильный разворотный сигнал"
+    if reversal_score >= 70:
+        reversal_text = "сильный разворотный сигнал"
 
-elif reversal_score >= 50:
-    reversal_text = "есть признаки локального разворота, вход только с подтверждением"
+    elif reversal_score >= 50:
+        reversal_text = "есть признаки локального разворота, вход только с подтверждением"
 
-elif reversal_score >= 30:
-    reversal_text = "слабые признаки разворота, лучше наблюдать"
+    elif reversal_score >= 30:
+        reversal_text = "слабые признаки разворота, лучше наблюдать"
 
-else:
-    reversal_text = "разворот пока не подтверждён"
+    else:
+        reversal_text = "разворот пока не подтверждён"
 
     if volume_signal == "SELL":
         reversal_score -= 15
