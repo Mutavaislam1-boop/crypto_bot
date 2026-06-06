@@ -517,6 +517,38 @@ def build_full_analysis(symbol, timeframe):
     else:
         neutral_count += 1
 
+        reversal_score = 0
+
+    if choch_signal == "BUY":
+        reversal_score += 25
+
+    if bos_signal == "BUY":
+        reversal_score += 20
+
+    if macd_histogram > 0:
+        reversal_score += 15
+
+    if volume_signal == "BUY":
+        reversal_score += 15
+
+    if price > support:
+        reversal_score += 10
+
+    if rsi > 45 and rsi < 70:
+        reversal_score += 10
+
+    if price > bb_middle:
+        reversal_score += 5
+
+    if reversal_score >= 70:
+        reversal_text = "сильный разворотный сигнал, но нужно учитывать общий рынок"
+    elif reversal_score >= 50:
+        reversal_text = "есть признаки локального разворота, вход только с подтверждением"
+    elif reversal_score >= 30:
+        reversal_text = "слабые признаки разворота, лучше наблюдать"
+    else:
+        reversal_text = "разворот пока не подтверждён"
+
     if volume_signal == "BUY":
         buy_count += 1
     elif volume_signal == "SELL":
@@ -931,6 +963,12 @@ CHOCH:
 
 CHOCH вывод:
 {choch_description}
+
+Reversal Score:
+{reversal_score} / 100
+
+Reversal вывод:
+{reversal_text}
 
 ━━━━━━━━━━━━━━
 УРОВНИ
