@@ -702,20 +702,35 @@ def build_full_analysis(symbol, timeframe):
     elif rr >= 1:
         entry_quality += 10
     else:
-        entry_quality -= 20
+        entry_quality -= 25
 
     if price <= entry_high:
-        entry_quality += 20
+        entry_quality += 15
     elif price <= entry_high * 1.02:
-        entry_quality += 10
+        entry_quality += 5
     else:
         entry_quality -= 20
 
     if price > support:
-        entry_quality += 10
+        entry_quality += 5
 
     if price >= resistance * 0.98:
+        entry_quality -= 20
+
+    if price < ema200:
         entry_quality -= 15
+
+    if price < vwap:
+        entry_quality -= 10
+
+    if "🔴" in btc_trend:
+        entry_quality -= 10
+
+    if sell_count > buy_count:
+        entry_quality -= 15
+
+    if reversal_score < 30:
+        entry_quality -= 10
 
     entry_quality = max(0, min(100, entry_quality))
 
