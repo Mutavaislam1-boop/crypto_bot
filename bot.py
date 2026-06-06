@@ -1889,29 +1889,27 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         symbol = coin + "USDT"
 
-        quick_text = build_quick_analysis(
-            symbol,
-            timeframe
-        )
+        quick_text = build_quick_analysis(symbol, timeframe)
 
         await query.message.reply_text(
-    quick_text,
-    reply_markup=InlineKeyboardMarkup(
-        [
-            [
-                InlineKeyboardButton(
-                    "📊 Полный анализ",
-                    callback_data=f"FULL_{coin}_{timeframe}"
-                ),
-                InlineKeyboardButton(
-                    "⚡ Скальпинг",
-                    callback_data=f"SCALP_{coin}_{timeframe}"
-                )
-            ]
-        ]
-    )
-)
-    return
+            quick_text,
+            reply_markup=InlineKeyboardMarkup(
+                [
+                    [
+                        InlineKeyboardButton(
+                            "📊 Полный анализ",
+                            callback_data=f"FULL_{coin}_{timeframe}"
+                        ),
+                        InlineKeyboardButton(
+                            "⚡ Скальпинг",
+                            callback_data=f"SCALP_{coin}_{timeframe}"
+                        )
+                    ]
+                ]
+            )
+        )
+        return
+       
     
     if data.startswith("FULL_"):
         parts = data.split("_")
@@ -1926,7 +1924,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             reply_markup=main_keyboard()
         )
 
-        return
+    return
 
     if data.startswith("CALC_"):
         coin = data.replace("CALC_", "")
