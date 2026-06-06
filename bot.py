@@ -611,19 +611,7 @@ def build_full_analysis(symbol, timeframe):
     else:
         reversal_text = "разворот пока не подтверждён"
 
-        market_phase, market_phase_text = detect_market_phase(
-        price,
-        ema20,
-        ema50,
-        ema200,
-        rsi,
-        macd_histogram,
-        volume_signal,
-        bos_signal,
-        choch_signal,
-        reversal_score,
-        rr
-    )
+    market_phase, market_phase_text = detect_market_phase(price, ema20, ema50, ema200, rsi, macd_histogram, volume_signal, bos_signal, choch_signal, reversal_score, rr)
 
     if volume_signal == "SELL":
         reversal_score -= 15
