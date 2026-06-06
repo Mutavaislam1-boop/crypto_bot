@@ -541,11 +541,14 @@ def build_full_analysis(symbol, timeframe):
         reversal_score += 5
 
     if reversal_score >= 70:
-        reversal_text = "сильный разворотный сигнал, но нужно учитывать общий рынок"
+        reversal_text = "сильный разворотный сигнал"
+
     elif reversal_score >= 50:
         reversal_text = "есть признаки локального разворота, вход только с подтверждением"
+
     elif reversal_score >= 30:
         reversal_text = "слабые признаки разворота, лучше наблюдать"
+
     else:
         reversal_text = "разворот пока не подтверждён"
 
@@ -554,7 +557,7 @@ def build_full_analysis(symbol, timeframe):
 
     if price < ema200:
         reversal_score -= 10
-
+ 
     if sell_count > buy_count:
         reversal_score -= 10
 
@@ -590,7 +593,7 @@ def build_full_analysis(symbol, timeframe):
         mtf_text = "таймфреймы дают смешанный сигнал"
 
     if "🔴" in btc_trend:
-
+        
         reversal_score -= 10
 
     reversal_score = max(0, min(100, reversal_score))
