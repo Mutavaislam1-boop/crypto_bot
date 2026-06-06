@@ -816,12 +816,39 @@ def build_full_analysis(symbol, timeframe):
     green_count = int(round(buy_score))
     score_bar = "🟢" * green_count + "⚪️" * (10 - green_count)
 
-    if buy_count > sell_count and buy_score >= 7:
-        decision = "🟢 ВХОД ВОЗМОЖЕН"
-    elif sell_count > buy_count:
-        decision = "🔴 ВХОД ОПАСЕН"
+    if (
+       buy_score >= 7
+       and reversal_score >= 70
+       and rr >= 2
+):
+       decision = "🟢 STRONG BUY"
+
+    elif (
+       buy_score >= 6
+       and rr >= 1.5
+):
+       decision = "🟢 NORMAL BUY"
+
+    elif (
+       reversal_score >= 60
+       and rr >= 1
+):
+       decision = "🟡 RISK ENTRY"
+
+    elif (
+       reversal_score >= 40
+       and bos_signal.startswith("🟢")
+):
+       decision = "🟡 WATCHLIST"
+
+    elif (
+       timeframe == "15m"
+       and reversal_score >= 50
+):
+       decision = "🟡 SCALP SETUP"
+
     else:
-        decision = "🟡 ЛУЧШЕ ЖДАТЬ"
+       decision = "🔴 NO TRADE"
 
     return f"""
 {symbol} | {timeframe}
