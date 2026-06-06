@@ -944,18 +944,31 @@ def build_full_analysis(symbol, timeframe):
     else:
         sell_count += 1
 
-    if sell_count >= buy_count + 3:
+    if decision == "🔴 NO TRADE":
+        timing_now = "🔴 Сейчас не входить"
+        timing_next = "Ждать улучшения структуры рынка или нового сигнала"
+        entry_condition = "Вход запрещён, пока итоговое решение NO TRADE"
+
+    elif entry_quality < 40:
+        timing_now = "🔴 Сейчас не входить"
+        timing_next = "Ждать более качественную точку входа"
+        entry_condition = "Вход запрещён из-за слабого Entry Quality"
+
+    elif sell_count >= buy_count + 3:
         timing_now = "🔴 Сейчас не входить"
         timing_next = "Ждать улучшения структуры рынка"
         entry_condition = "Вход запрещён, пока общий сигнал медвежий"
+
     elif rr < 1 and price > entry_high:
         timing_now = "🔴 Сейчас не входить"
         timing_next = "Ждать откат к Entry или пробой Resistance"
         entry_condition = "Вход только если цена вернётся в Entry или закрепится выше Resistance"
+
     elif rr >= 1 and price <= entry_high:
         timing_now = "🟢 Вход возможен сейчас"
         timing_next = "Можно искать точку входа по рынку"
         entry_condition = "Цена находится в зоне входа"
+
     else:
         timing_now = "🟡 Лучше подождать"
         timing_next = "Наблюдать 1–2 свечи"
