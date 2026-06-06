@@ -652,7 +652,6 @@ def build_full_analysis(symbol, timeframe):
         mtf_text = "таймфреймы дают смешанный сигнал"
 
     if "🔴" in btc_trend:
-        
         reversal_score -= 10
 
     reversal_score = max(0, min(100, reversal_score))
