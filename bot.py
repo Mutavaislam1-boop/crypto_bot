@@ -713,6 +713,51 @@ def build_full_analysis(symbol, timeframe):
     else:
         reversal_text = "разворот пока не подтверждён"
 
+        trend_score = 50
+
+    if price > ema20:
+        trend_score += 10
+    else:
+        trend_score -= 10
+
+    if ema20 > ema50:
+        trend_score += 15
+    else:
+        trend_score -= 15
+
+    if price > ema200:
+        trend_score += 20
+    else:
+        trend_score -= 20
+
+    if structure_signal == "BUY":
+        trend_score += 15
+    elif structure_signal == "SELL":
+        trend_score -= 15
+
+    if bullish_tf >= 2:
+        trend_score += 15
+    elif bearish_tf >= 2:
+        trend_score -= 15
+
+    if "🟢" in btc_trend:
+        trend_score += 10
+    elif "🔴" in btc_trend:
+        trend_score -= 10
+
+    trend_score = max(0, min(100, trend_score))
+
+    if trend_score >= 75:
+        trend_score_text = "сильный бычий тренд"
+    elif trend_score >= 55:
+        trend_score_text = "умеренно бычий тренд"
+    elif trend_score >= 40:
+        trend_score_text = "смешанный тренд"
+    elif trend_score >= 25:
+        trend_score_text = "слабый медвежий тренд"
+    else:
+        trend_score_text = "сильный медвежий тренд"
+
     market_phase, market_phase_text = detect_market_phase(
         price,
         ema20,
@@ -1195,6 +1240,12 @@ EMA200:
 
 Trend:
 {trend_text}
+
+Trend Score:
+{trend_score} / 100
+
+Trend Score вывод:
+{trend_score_text}
 
 Market Structure:
 
