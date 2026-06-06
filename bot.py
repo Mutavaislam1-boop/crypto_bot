@@ -599,11 +599,6 @@ def build_full_analysis(symbol, timeframe):
     if price > bb_middle:
         reversal_score += 5
 
-    if "🔴" in btc_trend:
-        reversal_score -= 10
-
-        reversal_score = max(0, min(100, reversal_score))
-
     if reversal_score >= 70:
         reversal_text = "сильный разворотный сигнал"
 
