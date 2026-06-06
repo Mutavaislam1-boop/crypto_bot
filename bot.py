@@ -372,6 +372,49 @@ def detect_bos(highs, lows, closes):
         "NEUTRAL"
     )
 
+def detect_choch(highs, lows, closes):
+    recent_highs = highs[-60:]
+    recent_lows = lows[-60:]
+    current_price = closes[-1]
+
+    swing_highs = []
+    swing_lows = []
+
+    for i in range(2, len(recent_highs) - 2):
+        if recent_highs[i] > recent_highs[i - 1] and recent_highs[i] > recent_highs[i + 1]:
+            swing_highs.append(recent_highs[i])
+
+        if recent_lows[i] < recent_lows[i - 1] and recent_lows[i] < recent_lows[i + 1]:
+            swing_lows.append(recent_lows[i])
+
+    if len(swing_highs) < 2 or len(swing_lows) < 2:
+        return "🟡 Нет CHOCH", "недостаточно структуры для определения CHOCH", "NEUTRAL"
+
+    last_high = swing_highs[-1]
+    prev_high = swing_highs[-2]
+
+    last_low = swing_lows[-1]
+    prev_low = swing_lows[-2]
+
+    bearish_structure = last_high < prev_high and last_low < prev_low
+    bullish_structure = last_high > prev_high and last_low > prev_low
+
+    if bearish_structure and current_price > last_high:
+        return (
+            "🟢 Bullish CHOCH",
+            "появился ранний признак смены медвежьей структуры вверх",
+            "BUY"
+        )
+
+    if bullish_structure and current_price < last_low:
+        return (
+            "🔴 Bearish CHOCH",
+            "появился ранний признак смены бычьей структуры вниз",
+            "SELL"
+        )
+
+    return "🟡 Нет CHOCH", "ранней смены характера движения пока нет", "NEUTRAL"
+
 def analyze_volume(volumes):
     current_volume = volumes[-1]
     avg_volume = sum(volumes[-20:]) / 20
@@ -440,6 +483,7 @@ def build_full_analysis(symbol, timeframe):
     support, resistance = get_levels(highs, lows, closes)
     market_structure, structure_text, structure_signal = analyze_market_structure(highs, lows, closes)
     bos_text, bos_description, bos_signal = detect_bos(highs, lows, closes)
+    choch_text, choch_description, choch_signal = detect_choch(highs, lows, closes)
     current_volume, avg_volume, volume_text, volume_status, volume_signal = analyze_volume(volumes)
 
     buy_count = 0
@@ -469,6 +513,15 @@ def build_full_analysis(symbol, timeframe):
         buy_count += 3
 
     elif bos_signal == "SELL":
+        sell_count += 3
+
+    else:
+        neutral_count += 1
+
+    if choch_signal == "BUY":
+        buy_count += 3
+
+    elif choch_signal == "SELL":
         sell_count += 3
 
     else:
@@ -882,6 +935,12 @@ BOS:
 
 BOS вывод:
 {bos_description}
+
+CHOCH:
+{choch_text}
+
+CHOCH вывод:
+{choch_description}
 
 ━━━━━━━━━━━━━━
 УРОВНИ
