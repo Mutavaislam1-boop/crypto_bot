@@ -524,11 +524,12 @@ def build_full_analysis(symbol, timeframe):
     ema50 = calculate_ema(closes, 50)
     ema200 = calculate_ema(closes, 200)
     macd, macd_signal, macd_histogram = calculate_macd(closes)
-    atr = calculate_atr(highs, lows, closes) 
+    atr = calculate_atr(highs, lows, closes)
     bb_upper, bb_middle, bb_lower = calculate_bollinger_bands(closes)
     stoch_rsi = calculate_stoch_rsi(closes)
     vwap = calculate_vwap(highs, lows, closes, volumes)
     fib_high, fib_low, fib_236, fib_382, fib_500, fib_618, fib_786 = calculate_fibonacci_levels(highs, lows)
+
     support, resistance = get_levels(highs, lows, closes)
     market_structure, structure_text, structure_signal = analyze_market_structure(highs, lows, closes)
     bos_text, bos_description, bos_signal = detect_bos(highs, lows, closes)
@@ -538,6 +539,11 @@ def build_full_analysis(symbol, timeframe):
     buy_count = 0
     sell_count = 0
     neutral_count = 0
+
+    btc_trend = get_btc_trend(timeframe)
+    trend_1d = get_asset_trend(symbol, "1d")
+    trend_4h = get_asset_trend(symbol, "4h")
+    trend_1h = get_asset_trend(symbol, "1h")
 
     atr_percent = (atr / price) * 100
 
@@ -560,65 +566,17 @@ def build_full_analysis(symbol, timeframe):
 
     if bos_signal == "BUY":
         buy_count += 3
-
     elif bos_signal == "SELL":
         sell_count += 3
-
     else:
         neutral_count += 1
 
     if choch_signal == "BUY":
         buy_count += 3
-
     elif choch_signal == "SELL":
         sell_count += 3
-
     else:
         neutral_count += 1
-
-        reversal_score = 0
-
-    if choch_signal == "BUY":
-        reversal_score += 25
-
-    if bos_signal == "BUY":
-        reversal_score += 20
-
-    if macd_histogram > 0:
-        reversal_score += 15
-
-    if volume_signal == "BUY":
-        reversal_score += 15
-
-    if price > support:
-        reversal_score += 10
-
-    if rsi > 45 and rsi < 70:
-        reversal_score += 10
-
-    if price > bb_middle:
-        reversal_score += 5
-
-    if reversal_score >= 70:
-        reversal_text = "сильный разворотный сигнал"
-
-    elif reversal_score >= 50:
-        reversal_text = "есть признаки локального разворота, вход только с подтверждением"
-
-    elif reversal_score >= 30:
-        reversal_text = "слабые признаки разворота, лучше наблюдать"
-
-    else:
-        reversal_text = "разворот пока не подтверждён"
-
-    if volume_signal == "SELL":
-        reversal_score -= 15
-
-    if price < ema200:
-        reversal_score -= 10
- 
-    if sell_count > buy_count:
-        reversal_score -= 10
 
     if volume_signal == "BUY":
         buy_count += 1
@@ -627,11 +585,6 @@ def build_full_analysis(symbol, timeframe):
     else:
         neutral_count += 1
 
-    btc_trend = get_btc_trend(timeframe)
-    trend_1d = get_asset_trend(symbol, "1d")
-    trend_4h = get_asset_trend(symbol, "4h")
-    trend_1h = get_asset_trend(symbol, "1h")
-    
     bullish_tf = 0
     bearish_tf = 0
 
@@ -651,26 +604,79 @@ def build_full_analysis(symbol, timeframe):
         neutral_count += 1
         mtf_text = "таймфреймы дают смешанный сигнал"
 
-    if "🔴" in btc_trend:
-        reversal_score -= 10
-
-    reversal_score = max(0, min(100, reversal_score))
-
     entry_low = support * 1.005
     entry_high = support * 1.02
     stop = support * 0.98
     tp1 = resistance
     tp2 = resistance * 1.04
+
     reward = tp1 - price
     risk = price - stop
 
     if risk > 0:
-
         rr = round(reward / risk, 2)
-
     else:
-
         rr = 0
+
+    reversal_score = 0
+
+    if choch_signal == "BUY":
+        reversal_score += 25
+
+    if bos_signal == "BUY":
+        reversal_score += 20
+
+    if macd_histogram > 0:
+        reversal_score += 15
+
+    if volume_signal == "BUY":
+        reversal_score += 15
+
+    if price > support:
+        reversal_score += 10
+
+    if 45 < rsi < 70:
+        reversal_score += 10
+
+    if price > bb_middle:
+        reversal_score += 5
+
+    if volume_signal == "SELL":
+        reversal_score -= 15
+
+    if price < ema200:
+        reversal_score -= 10
+
+    if sell_count > buy_count:
+        reversal_score -= 10
+
+    if "🔴" in btc_trend:
+        reversal_score -= 10
+
+    reversal_score = max(0, min(100, reversal_score))
+
+    if reversal_score >= 70:
+        reversal_text = "сильный разворотный сигнал"
+    elif reversal_score >= 50:
+        reversal_text = "есть признаки локального разворота, вход только с подтверждением"
+    elif reversal_score >= 30:
+        reversal_text = "слабые признаки разворота, лучше наблюдать"
+    else:
+        reversal_text = "разворот пока не подтверждён"
+
+    market_phase, market_phase_text = detect_market_phase(
+        price,
+        ema20,
+        ema50,
+        ema200,
+        rsi,
+        macd_histogram,
+        volume_signal,
+        bos_signal,
+        choch_signal,
+        reversal_score,
+        rr
+    )
 
     entry_quality = 50
 
@@ -696,6 +702,17 @@ def build_full_analysis(symbol, timeframe):
 
     entry_quality = max(0, min(100, entry_quality))
 
+    if entry_quality >= 75:
+        entry_quality_text = "отличная точка входа"
+    elif entry_quality >= 60:
+        entry_quality_text = "хорошая точка входа"
+    elif entry_quality >= 40:
+        entry_quality_text = "среднее качество входа"
+    elif entry_quality >= 20:
+        entry_quality_text = "точка входа слабая"
+    else:
+        entry_quality_text = "вход сейчас невыгоден"
+
     scalp_score = 0
 
     if reversal_score >= 40:
@@ -707,7 +724,7 @@ def build_full_analysis(symbol, timeframe):
     if macd_histogram > 0:
         scalp_score += 15
 
-    if rsi > 45 and rsi < 70:
+    if 45 < rsi < 70:
         scalp_score += 10
 
     if price > bb_middle:
@@ -740,49 +757,12 @@ def build_full_analysis(symbol, timeframe):
     else:
         scalp_text = "скальп-сетап отсутствует"
 
-    if entry_quality >= 75:
-        entry_quality_text = "отличная точка входа"
-
-    elif entry_quality >= 60:
-        entry_quality_text = "хорошая точка входа"
-
-    elif entry_quality >= 40:
-        entry_quality_text = "среднее качество входа"
-
-    elif entry_quality >= 20:
-        entry_quality_text = "точка входа слабая"
-
-    else:
-        entry_quality_text = "вход сейчас невыгоден"
-
     if price <= entry_high:
         entry_text = "цена находится в зоне входа"
     elif price <= entry_high * 1.02:
         entry_text = "цена немного выше зоны входа"
     else:
         entry_text = "цена сильно ушла от точки входа"
-
-    market_phase, market_phase_text = detect_market_phase(price, ema20, ema50, ema200, rsi, macd_histogram, volume_signal, bos_signal, choch_signal, reversal_score, rr)
-
-    if sell_count >= buy_count + 3:
-        timing_now = "🔴 Сейчас не входить"
-        timing_next = "Ждать улучшения структуры рынка"
-        entry_condition = "Вход запрещён, пока общий сигнал медвежий"
-
-    elif rr < 1 and price > entry_high:
-        timing_now = "🔴 Сейчас не входить"
-        timing_next = "Ждать откат к Entry или пробой Resistance"
-        entry_condition = "Вход только если цена вернётся в Entry или закрепится выше Resistance"
-
-    elif rr >= 1 and price <= entry_high:
-        timing_now = "🟢 Вход возможен сейчас"
-        timing_next = "Можно искать точку входа по рынку"
-        entry_condition = "Цена находится в зоне входа"
-
-    else:
-        timing_now = "🟡 Лучше подождать"
-        timing_next = "Наблюдать 1–2 свечи"
-        entry_condition = "Ждать подтверждения от цены"
 
     if rsi < 30:
         buy_count += 1
@@ -833,7 +813,6 @@ def build_full_analysis(symbol, timeframe):
     if price >= bb_upper:
         sell_count += 1
         bb_text = "цена у верхней полосы Bollinger — риск локального отката выше"
-
     elif price <= bb_lower:
         buy_count += 1
         bb_text = "цена у нижней полосы Bollinger — возможен локальный отскок"
@@ -843,6 +822,7 @@ def build_full_analysis(symbol, timeframe):
     else:
         neutral_count += 1
         bb_text = "цена ниже средней Bollinger — импульс слабее"
+
     if stoch_rsi > 80:
         sell_count += 1
         stoch_rsi_text = "Stochastic RSI в зоне перекупленности — риск отката повышен"
@@ -858,6 +838,7 @@ def build_full_analysis(symbol, timeframe):
     else:
         neutral_count += 1
         stoch_rsi_text = "Stochastic RSI ниже средней зоны — импульс слабее"
+
     if price > vwap:
         buy_count += 1
         vwap_text = "цена выше VWAP — покупатель контролирует рынок"
@@ -867,6 +848,7 @@ def build_full_analysis(symbol, timeframe):
     else:
         neutral_count += 1
         vwap_text = "цена около VWAP — баланс спроса и предложения"
+
     if fib_382 <= price <= fib_618:
         buy_count += 1
         fib_text = "цена в зоне Fibonacci 0.382–0.618 — нормальная зона отката"
@@ -879,8 +861,6 @@ def build_full_analysis(symbol, timeframe):
     else:
         neutral_count += 1
         fib_text = "цена между ключевыми Fibonacci уровнями — сигнал нейтральный"
-
-    
 
     if price > ema200:
         buy_count += 1
@@ -932,7 +912,24 @@ def build_full_analysis(symbol, timeframe):
     else:
         sell_count += 1
 
-        consensus_total = buy_count + sell_count + neutral_count
+    if sell_count >= buy_count + 3:
+        timing_now = "🔴 Сейчас не входить"
+        timing_next = "Ждать улучшения структуры рынка"
+        entry_condition = "Вход запрещён, пока общий сигнал медвежий"
+    elif rr < 1 and price > entry_high:
+        timing_now = "🔴 Сейчас не входить"
+        timing_next = "Ждать откат к Entry или пробой Resistance"
+        entry_condition = "Вход только если цена вернётся в Entry или закрепится выше Resistance"
+    elif rr >= 1 and price <= entry_high:
+        timing_now = "🟢 Вход возможен сейчас"
+        timing_next = "Можно искать точку входа по рынку"
+        entry_condition = "Цена находится в зоне входа"
+    else:
+        timing_now = "🟡 Лучше подождать"
+        timing_next = "Наблюдать 1–2 свечи"
+        entry_condition = "Ждать подтверждения от цены"
+
+    consensus_total = buy_count + sell_count + neutral_count
 
     if consensus_total > 0:
         bullish_percent = round((buy_count / consensus_total) * 100)
@@ -962,42 +959,20 @@ def build_full_analysis(symbol, timeframe):
     green_count = int(round(buy_score))
     score_bar = "🟢" * green_count + "⚪️" * (10 - green_count)
 
-    if (
-       buy_score >= 7
-       and reversal_score >= 70
-       and rr >= 2
-):
-       decision = "🟢 STRONG BUY"
-
-    elif (
-       buy_score >= 6
-       and rr >= 1.5
-):
-       decision = "🟢 NORMAL BUY"
-
-    elif (
-       reversal_score >= 60
-       and rr >= 1
-):
-       decision = "🟡 RISK ENTRY"
-
-    elif (
-       reversal_score >= 40
-       and bos_signal.startswith("🟢")
-):
-       decision = "🟡 WATCHLIST"
-
-    elif (
-       timeframe == "15m"
-       and reversal_score >= 50
-):
-       decision = "🟡 SCALP SETUP"
-
+    if buy_score >= 7 and reversal_score >= 70 and rr >= 2:
+        decision = "🟢 STRONG BUY"
+    elif buy_score >= 6 and rr >= 1.5:
+        decision = "🟢 NORMAL BUY"
+    elif reversal_score >= 60 and rr >= 1:
+        decision = "🟡 RISK ENTRY"
+    elif reversal_score >= 40 and bos_signal.startswith("🟢"):
+        decision = "🟡 WATCHLIST"
+    elif timeframe == "15m" and reversal_score >= 50:
+        decision = "🟡 SCALP SETUP"
     elif market_phase == "🟡 Recovery" and rr >= 1:
-       decision = "🟡 WATCHLIST" 
-
+        decision = "🟡 WATCHLIST"
     else:
-       decision = "🔴 NO TRADE"
+        decision = "🔴 NO TRADE"
 
     return f"""
 {symbol} | {timeframe}
