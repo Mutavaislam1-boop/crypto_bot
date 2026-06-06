@@ -748,9 +748,6 @@ def build_full_analysis(symbol, timeframe):
     if macd_histogram > 0:
         trend_score += 10
 
-    if relative_strength > 0:
-        trend_score += 10
-
     if choch_signal == "BUY":
         trend_score += 10
 
