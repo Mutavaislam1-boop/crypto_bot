@@ -405,6 +405,65 @@ def detect_choch(highs, lows, closes, volumes):
         "NEUTRAL"
     )
 
+def detect_market_phase(
+    price,
+    ema20,
+    ema50,
+    ema200,
+    rsi,
+    macd_histogram,
+    volume_signal,
+    bos_signal,
+    choch_signal,
+    reversal_score,
+    rr
+):
+    if (
+        price > ema20
+        and ema20 > ema50
+        and price > ema200
+        and rsi > 55
+        and rr >= 1
+    ):
+        return "🟢 Uptrend", "рынок находится в бычьей фазе"
+
+    if (
+        price < ema20
+        and ema20 < ema50
+        and price < ema200
+        and rsi < 45
+        and macd_histogram < 0
+    ):
+        return "🔴 Downtrend", "рынок находится в устойчивой медвежьей фазе"
+
+    if (
+        price < ema200
+        and rsi < 35
+        and volume_signal == "BUY"
+    ):
+        return "🟡 Capitulation", "возможна капитуляция продавцов и резкий отскок"
+
+    if (
+        price < ema200
+        and reversal_score >= 35
+        and (bos_signal == "BUY" or choch_signal == "BUY")
+        and macd_histogram > 0
+    ):
+        return "🟡 Recovery", "рынок пытается восстановиться после падения"
+
+    if (
+        reversal_score >= 60
+        and bos_signal == "BUY"
+        and choch_signal == "BUY"
+        and price > ema20
+    ):
+        return "🟢 Reversal", "появляются признаки полноценного разворота"
+
+    if rr < 1:
+        return "⚪ Range / Bad Entry", "рынок может быть в диапазоне, но точка входа некачественная"
+
+    return "⚪ Neutral", "фаза рынка смешанная, нужен дополнительный сигнал"
+
 def analyze_volume(volumes):
     current_volume = volumes[-1]
     avg_volume = sum(volumes[-20:]) / 20
@@ -551,6 +610,20 @@ def build_full_analysis(symbol, timeframe):
 
     else:
         reversal_text = "разворот пока не подтверждён"
+
+        market_phase, market_phase_text = detect_market_phase(
+        price,
+        ema20,
+        ema50,
+        ema200,
+        rsi,
+        macd_histogram,
+        volume_signal,
+        bos_signal,
+        choch_signal,
+        reversal_score,
+        rr
+    )
 
     if volume_signal == "SELL":
         reversal_score -= 15
@@ -847,6 +920,9 @@ def build_full_analysis(symbol, timeframe):
 ):
        decision = "🟡 SCALP SETUP"
 
+    elif market_phase == "🟡 Recovery" and rr >= 1:
+       decision = "🟡 WATCHLIST" 
+
     else:
        decision = "🔴 NO TRADE"
 
@@ -1014,6 +1090,12 @@ Reversal Score:
 
 Reversal вывод:
 {reversal_text}
+
+Market Phase:
+{market_phase}
+
+Market Phase вывод:
+{market_phase_text}
 
 ━━━━━━━━━━━━━━
 УРОВНИ
