@@ -1738,7 +1738,12 @@ def build_quick_analysis(symbol, timeframe):
     else:
         decision = "🟡 Ждать"
 
-    if sell_count >= buy_count + 3:
+    if decision == "🟡 WAIT PULLBACK":
+        timing_now = "🟡 Ждать откат"
+        timing_next = "Искать вход после отката к зоне Entry или после нового подтверждения"
+        entry_condition = "Монета сильная, но после пампа вход сейчас опасный"
+
+    elif sell_count >= buy_count + 3:
         timing_now = "🔴 Сейчас не входить"
         timing_next = "Ждать улучшения структуры рынка"
         entry_condition = "Вход запрещён, пока общий сигнал медвежий"
