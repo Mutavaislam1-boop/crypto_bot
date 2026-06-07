@@ -1040,41 +1040,6 @@ def build_full_analysis(symbol, timeframe):
     else:
         sell_count += 1
 
-    if decision == "🟢 STRONG BUY":
-        timing_now = "🟢 Вход возможен"
-        timing_next = "Можно искать вход сейчас или на небольшом откате"
-        entry_condition = "Сетап сильный, но риск всё равно контролировать"
-
-    elif decision == "🟢 NORMAL BUY":
-        timing_now = "🟢 Вход возможен осторожно"
-        timing_next = "Лучше дождаться подтверждения или короткого отката"
-        entry_condition = "Вход разрешён при сохранении структуры"
-
-    elif decision == "🟡 RISK ENTRY":
-        timing_now = "🟡 Вход рискованный"
-        timing_next = "Ждать подтверждение 1–2 свечи"
-        entry_condition = "Вход только малым риском"
-
-    elif decision == "🟡 WAIT PULLBACK":
-        timing_now = "🟡 Ждать откат"
-        timing_next = "Искать вход после отката к Entry или нового подтверждения"
-        entry_condition = "Монета сильная, но текущая точка входа плохая"
-
-    elif decision == "🟡 WATCHLIST":
-        timing_now = "🟡 Наблюдать"
-        timing_next = "Ждать улучшения входа или подтверждения движения"
-        entry_condition = "Монета интересная, но вход пока не подтверждён"
-
-    elif decision == "🟡 SCALP SETUP":
-        timing_now = "🟡 Возможен скальп"
-        timing_next = "Работать только короткой сделкой"
-        entry_condition = "Скальп только с коротким стопом"
-
-    else:
-        timing_now = "🔴 Сейчас не входить"
-        timing_next = "Ждать новый сигнал"
-        entry_condition = "Вход запрещён, условия слабые"
-
     consensus_total = buy_count + sell_count + neutral_count
 
     if consensus_total > 0:
@@ -1150,6 +1115,41 @@ def build_full_analysis(symbol, timeframe):
 
     else:
         decision = "🔴 NO TRADE"
+
+    if decision == "🟢 STRONG BUY":
+        timing_now = "🟢 Вход возможен"
+        timing_next = "Можно искать вход сейчас или на небольшом откате"
+        entry_condition = "Сетап сильный, но риск всё равно контролировать"
+
+    elif decision == "🟢 NORMAL BUY":
+        timing_now = "🟢 Вход возможен осторожно"
+        timing_next = "Лучше дождаться подтверждения или короткого отката"
+        entry_condition = "Вход разрешён при сохранении структуры"
+
+    elif decision == "🟡 RISK ENTRY":
+        timing_now = "🟡 Вход рискованный"
+        timing_next = "Ждать подтверждение 1–2 свечи"
+        entry_condition = "Вход только малым риском"
+
+    elif decision == "🟡 WAIT PULLBACK":
+        timing_now = "🟡 Ждать откат"
+        timing_next = "Искать вход после отката к Entry или нового подтверждения"
+        entry_condition = "Монета сильная, но текущая точка входа плохая"
+
+    elif decision == "🟡 WATCHLIST":
+        timing_now = "🟡 Наблюдать"
+        timing_next = "Ждать улучшения входа или подтверждения движения"
+        entry_condition = "Монета интересная, но вход пока не подтверждён"
+
+    elif decision == "🟡 SCALP SETUP":
+        timing_now = "🟡 Возможен скальп"
+        timing_next = "Работать только короткой сделкой"
+        entry_condition = "Скальп только с коротким стопом"
+
+    else:
+        timing_now = "🔴 Сейчас не входить"
+        timing_next = "Ждать новый сигнал"
+        entry_condition = "Вход запрещён, условия слабые"
 
     return f"""
 {symbol} | {timeframe}
