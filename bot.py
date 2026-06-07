@@ -1040,35 +1040,40 @@ def build_full_analysis(symbol, timeframe):
     else:
         sell_count += 1
 
-    if sell_count >= buy_count + 3 or entry_quality < 40:
-        timing_now = "🔴 Сейчас не входить"
-        timing_next = "Ждать улучшения структуры рынка или нового сигнала"
-        entry_condition = "Вход запрещён, пока итоговое решение NO TRADE"
+    if decision == "🟢 STRONG BUY":
+        timing_now = "🟢 Вход возможен"
+        timing_next = "Можно искать вход сейчас или на небольшом откате"
+        entry_condition = "Сетап сильный, но риск всё равно контролировать"
 
-    elif entry_quality < 40:
-        timing_now = "🔴 Сейчас не входить"
-        timing_next = "Ждать более качественную точку входа"
-        entry_condition = "Вход запрещён из-за слабого Entry Quality"
+    elif decision == "🟢 NORMAL BUY":
+        timing_now = "🟢 Вход возможен осторожно"
+        timing_next = "Лучше дождаться подтверждения или короткого отката"
+        entry_condition = "Вход разрешён при сохранении структуры"
 
-    elif sell_count >= buy_count + 3:
-        timing_now = "🔴 Сейчас не входить"
-        timing_next = "Ждать улучшения структуры рынка"
-        entry_condition = "Вход запрещён, пока общий сигнал медвежий"
+    elif decision == "🟡 RISK ENTRY":
+        timing_now = "🟡 Вход рискованный"
+        timing_next = "Ждать подтверждение 1–2 свечи"
+        entry_condition = "Вход только малым риском"
 
-    elif rr < 1 and price > entry_high:
-        timing_now = "🔴 Сейчас не входить"
-        timing_next = "Ждать откат к Entry или пробой Resistance"
-        entry_condition = "Вход только если цена вернётся в Entry или закрепится выше Resistance"
+    elif decision == "🟡 WAIT PULLBACK":
+        timing_now = "🟡 Ждать откат"
+        timing_next = "Искать вход после отката к Entry или нового подтверждения"
+        entry_condition = "Монета сильная, но текущая точка входа плохая"
 
-    elif rr >= 1 and price <= entry_high:
-        timing_now = "🟢 Вход возможен сейчас"
-        timing_next = "Можно искать точку входа по рынку"
-        entry_condition = "Цена находится в зоне входа"
+    elif decision == "🟡 WATCHLIST":
+        timing_now = "🟡 Наблюдать"
+        timing_next = "Ждать улучшения входа или подтверждения движения"
+        entry_condition = "Монета интересная, но вход пока не подтверждён"
+
+    elif decision == "🟡 SCALP SETUP":
+        timing_now = "🟡 Возможен скальп"
+        timing_next = "Работать только короткой сделкой"
+        entry_condition = "Скальп только с коротким стопом"
 
     else:
-        timing_now = "🟡 Лучше подождать"
-        timing_next = "Наблюдать 1–2 свечи"
-        entry_condition = "Ждать подтверждения от цены"
+        timing_now = "🔴 Сейчас не входить"
+        timing_next = "Ждать новый сигнал"
+        entry_condition = "Вход запрещён, условия слабые"
 
     consensus_total = buy_count + sell_count + neutral_count
 
@@ -1101,26 +1106,21 @@ def build_full_analysis(symbol, timeframe):
     score_bar = "🟢" * green_count + "⚪️" * (10 - green_count)
 
     if (
-    buy_score >= 7
-    and reversal_score >= 70
-    and rr >= 2
-    and trend_score >= 60
+        buy_score >= 7
+        and reversal_score >= 70
+        and rr >= 2
+        and trend_score >= 60
+        and entry_quality >= 60
 ):
         decision = "🟢 STRONG BUY"
+
     elif (
-    buy_score >= 6
-    and rr >= 1.5
-    and trend_score >= 50
+        buy_score >= 6
+        and rr >= 1.5
+        and trend_score >= 50
+        and entry_quality >= 50
 ):
         decision = "🟢 NORMAL BUY"
-    elif reversal_score >= 60 and rr >= 1:
-        decision = "🟡 RISK ENTRY"
-    elif reversal_score >= 40 and bos_signal.startswith("🟢"):
-        decision = "🟡 WATCHLIST"
-    elif timeframe == "15m" and reversal_score >= 50:
-        decision = "🟡 SCALP SETUP"
-    elif market_phase == "🟡 Recovery" and rr >= 1:
-        decision = "🟡 WATCHLIST"
 
     elif (
         trend_score >= 70
@@ -1129,8 +1129,27 @@ def build_full_analysis(symbol, timeframe):
 ):
         decision = "🟡 WAIT PULLBACK"
 
+    elif (
+        reversal_score >= 60
+        and rr >= 1
+        and entry_quality >= 40
+):
+        decision = "🟡 RISK ENTRY"
+
+    elif (
+        trend_score >= 45
+        and relative_strength_signal == "BUY"
+):
+        decision = "🟡 WATCHLIST"
+
+    elif (
+        timeframe == "15m"
+        and scalp_score >= 55
+):
+        decision = "🟡 SCALP SETUP"
+
     else:
-         decision = "🔴 NO TRADE"
+        decision = "🔴 NO TRADE"
 
     return f"""
 {symbol} | {timeframe}
