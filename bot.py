@@ -1124,10 +1124,10 @@ def build_full_analysis(symbol, timeframe):
 
     elif (
         trend_score >= 70
-        and buy_score >= 5
-        and rr >= 1
-        and entry_quality < 50
         and relative_strength_signal == "BUY"
+        and entry_quality < 50
+        and bullish_percent >= 40
+        and rr >= 0.8
 ):
         decision = "🟡 WAIT PULLBACK"
 
