@@ -1121,8 +1121,18 @@ def build_full_analysis(symbol, timeframe):
         decision = "🟡 SCALP SETUP"
     elif market_phase == "🟡 Recovery" and rr >= 1:
         decision = "🟡 WATCHLIST"
+
+    elif (
+        trend_score >= 70
+        and buy_score >= 5
+        and rr >= 1
+        and entry_quality < 50
+        and relative_strength_signal == "BUY"
+):
+        decision = "🟡 WAIT PULLBACK"
+
     else:
-        decision = "🔴 NO TRADE"
+         decision = "🔴 NO TRADE"
 
     return f"""
 {symbol} | {timeframe}
