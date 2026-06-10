@@ -1,3 +1,5 @@
+import psycopg2
+from psycopg2.extras import RealDictCursor
 import sqlite3
 from datetime import datetime, timedelta
 import time
@@ -19,6 +21,7 @@ from telegram.ext import (
 )
 
 TOKEN = os.getenv("BOT_TOKEN")
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 user_state = {}
 market_cache = {}
@@ -54,24 +57,26 @@ def calculate_rsi(closes, period=14):
     return round(100 - (100 / (1 + rs)), 2)
 
 def init_signal_db():
-    conn = sqlite3.connect("signals.db")
+
+    conn = psycopg2.connect(DATABASE_URL)
+
     cursor = conn.cursor()
 
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS signals (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             created_at TEXT,
             symbol TEXT,
             timeframe TEXT,
-            price REAL,
+            price DOUBLE PRECISION,
             decision TEXT,
-            buy_score REAL,
-            trend_score REAL,
-            entry_low REAL,
-            entry_high REAL,
-            stop REAL,
-            tp1 REAL,
-            tp2 REAL,
+            buy_score DOUBLE PRECISION,
+            trend_score DOUBLE PRECISION,
+            entry_low DOUBLE PRECISION,
+            entry_high DOUBLE PRECISION,
+            stop DOUBLE PRECISION,
+            tp1 DOUBLE PRECISION,
+            tp2 DOUBLE PRECISION,
             check_4h_done INTEGER DEFAULT 0,
             check_24h_done INTEGER DEFAULT 0,
             check_72h_done INTEGER DEFAULT 0
