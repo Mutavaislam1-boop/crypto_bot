@@ -2444,7 +2444,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         await query.message.reply_text(
             quick_text,
-            parse_mode="HTML",
+        parse_mode="HTML",
             reply_markup=InlineKeyboardMarkup(
                 [
                     [
@@ -2506,7 +2506,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         scalp_text = build_scalp_analysis(symbol, timeframe)
 
-        await query.message.reply_text(scalp_text)
+        await query.message.reply_text(scalp_text, parse_mode="HTML")
         
         return
 
