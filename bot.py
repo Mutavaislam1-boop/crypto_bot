@@ -79,7 +79,10 @@ def init_signal_db():
     """)
 
     conn.commit()
+
     conn.close()
+
+    print("SIGNAL DATABASE CREATED")
 
 def save_signal(
     symbol,
@@ -94,9 +97,9 @@ def save_signal(
     tp1,
     tp2
 ):
-    print("SAVE SIGNAL CALLED")   
+    print("SAVE SIGNAL CALLED")
 
-    conn = sqlite3.connect("signals.db")
+    conn = psycopg2.connect(DATABASE_URL)
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -114,7 +117,8 @@ def save_signal(
             tp1,
             tp2
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        RETURNING id
     """, (
         datetime.utcnow().isoformat(),
         symbol,
@@ -130,28 +134,18 @@ def save_signal(
         tp2
     ))
 
-    signal_id = cursor.lastrowid
-
-    print("SIGNAL SAVED:", symbol)
+    signal_id = cursor.fetchone()[0]
 
     conn.commit()
-
     conn.close()
+
+    print("SIGNAL SAVED:", symbol, signal_id)
 
     return signal_id
 
 def get_unchecked_signals():
-    conn = sqlite3.connect("signals.db")
+    conn = psycopg2.connect(DATABASE_URL)
     cursor = conn.cursor()
-
-    cursor.execute("""
-        SELECT *
-        FROM signals
-        WHERE
-            check_4h_done = 0
-            OR check_24h_done = 0
-            OR check_72h_done = 0
-    """)
 
     cursor.execute("SELECT COUNT(*) FROM signals")
     print("TOTAL SIGNALS:", cursor.fetchone()[0])
@@ -163,6 +157,7 @@ def get_unchecked_signals():
             check_4h_done = 0
             OR check_24h_done = 0
             OR check_72h_done = 0
+        ORDER BY id ASC
     """)
 
     rows = cursor.fetchall()
@@ -172,14 +167,14 @@ def get_unchecked_signals():
     return rows
 
 def update_signal_check(signal_id, field):
-    conn = sqlite3.connect("signals.db")
+    conn = psycopg2.connect(DATABASE_URL)
     cursor = conn.cursor()
 
     cursor.execute(
         f"""
         UPDATE signals
         SET {field}=1
-        WHERE id=?
+        WHERE id=%s
         """,
         (signal_id,)
     )
