@@ -82,6 +82,7 @@ def init_signal_db():
     conn.close()
 
 def save_signal(
+    print("SAVE SIGNAL CALLED")    
     symbol,
     timeframe,
     price,
@@ -129,6 +130,8 @@ def save_signal(
     ))
 
     signal_id = cursor.lastrowid
+
+    print("SIGNAL SAVED:", symbol)
 
     conn.commit()
 
