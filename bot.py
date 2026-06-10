@@ -2183,40 +2183,81 @@ def build_quick_analysis(symbol, timeframe):
     change_emoji = "📈" if change_24h >= 0 else "📉"
 
     return f"""
-{symbol} | {timeframe.upper()} | Цена: {round(price, 4)}
+📊 ОТЧЁТ ПО РЫНКУ
 
 ━━━━━━━━━━━━━━
 
-📊 Объём 24ч
+🪙 Монета:
+<b>{symbol}</b>
 
-Max: {round(high_24h, 4)}      {change_emoji} {round(change_24h, 2)}%
-Min: {round(low_24h, 4)}
+⏱ Таймфрейм:
+<b>{timeframe.upper()}</b>
+
+💰 Цена:
+<b>{round(price, 4)} USDT</b>
 
 ━━━━━━━━━━━━━━
+
+📈 24H ДИАПАЗОН
+
+High:
+<b>{round(high_24h, 4)}</b>
+
+Low:
+<b>{round(low_24h, 4)}</b>
+
+Изменение:
+<b>{round(change_24h, 2)}%</b> {change_emoji}
+
+━━━━━━━━━━━━━━
+
+🤖 РЕШЕНИЕ БОТА
 
 {decision}
 
-{trend_emoji} Тренд: {trend_text}
+━━━━━━━━━━━━━━
 
-{btc_emoji} BTC: {btc_short}
-RSI: {rsi}
+📊 СОСТОЯНИЕ РЫНКА
 
-{volume_emoji} Volume: {volume_short}
-R/R: 1:{rr}
+{trend_emoji} Тренд:
+<b>{trend_text}</b>
 
-Bull: {bullish_percent}%
-Bear: {bearish_percent}%
+{btc_emoji} BTC:
+<b>{btc_short}</b>
 
-Тайминг:
-{timing_now}
+{volume_emoji} Volume:
+<b>{volume_short}</b>
+
+RSI:
+<b>{rsi}</b>
+
+R/R:
+<b>1:{rr}</b>
 
 ━━━━━━━━━━━━━━
 
-🚨 Бот не гарантирует прибыль
+⚖️ БАЛАНС СИГНАЛОВ
 
-⚠️ Все сделки пользователь
-совершает самостоятельно
-"""
+🟢 Bull:
+<b>{bullish_percent}%</b>
+
+🔴 Bear:
+<b>{bearish_percent}%</b>
+
+━━━━━━━━━━━━━━
+
+⏱ ТАЙМИНГ
+
+{timing_now}
+
+Условие:
+{entry_condition}
+
+━━━━━━━━━━━━━━
+
+⚠️ Бот не гарантирует прибыль.
+Решение по сделке принимает пользователь.
+"""  
 
 def get_coingecko_market(symbol):
     now = time.time()
@@ -2438,6 +2479,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         await query.message.reply_text(
             quick_text,
+            parse_mode="HTML",
             reply_markup=InlineKeyboardMarkup(
                 [
                     [
