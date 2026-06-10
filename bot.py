@@ -270,6 +270,138 @@ def check_signals():
             else:
                 verdict = "⚪ NEUTRAL"
 
+        if hours_passed >= 72 and check_72h_done == 0:
+
+            report_text = f"""
+        🧠 SELF TEST REPORT
+
+        Проверка: 72H
+
+        Signal ID: #{signal_id}
+
+        Монета:
+        {symbol}
+
+        Решение:
+        {decision}
+
+        Результат:
+        {result_percent}%
+
+        Вердикт:
+        {verdict}
+        """
+
+            print(
+                f"72H CHECK | "
+                f"Signal #{signal_id} | "
+                f"{symbol} | "
+                f"{result_percent}% | "
+                f"{verdict}"
+            )
+
+            update_signal_check(signal_id, "check_72h_done")
+
+            try:
+                requests.post(
+                    f"https://api.telegram.org/bot{TOKEN}/sendMessage",
+                    json={
+                        "chat_id": ADMIN_ID,
+                        "text": report_text
+                    },
+                    timeout=10
+                )
+            except Exception as e:
+                print("ADMIN REPORT ERROR:", e)
+
+        elif hours_passed >= 24 and check_24h_done == 0:
+
+            report_text = f"""
+        🧠 SELF TEST REPORT
+
+        Проверка: 24H
+
+        Signal ID: #{signal_id}
+
+        Монета:
+        {symbol}
+
+        Решение:
+        {decision}
+
+        Результат:
+        {result_percent}%
+
+        Вердикт:
+        {verdict}
+        """
+
+            print(
+                f"24H CHECK | "
+                f"Signal #{signal_id} | "
+                f"{symbol} | "
+                f"{result_percent}% | "
+                f"{verdict}"
+            )
+
+            update_signal_check(signal_id, "check_24h_done")
+
+            try:
+                requests.post(
+                    f"https://api.telegram.org/bot{TOKEN}/sendMessage",
+                    json={
+                        "chat_id": ADMIN_ID,
+                        "text": report_text
+                    },
+                    timeout=10
+                )
+            except Exception as e:
+                print("ADMIN REPORT ERROR:", e)
+
+        elif hours_passed >= 4 and check_4h_done == 0:
+
+            report_text = f"""
+        🧠 SELF TEST REPORT
+
+        Проверка: 4H
+
+        Signal ID: #{signal_id}
+
+        Монета:
+        {symbol}
+
+        Решение:
+        {decision}
+
+        Результат:
+        {result_percent}%
+
+        Вердикт:
+        {verdict}
+        """
+
+            print(
+                f"4H CHECK | "
+                f"Signal #{signal_id} | "
+                f"{symbol} | "
+                f"{result_percent}% | "
+                f"{verdict}"
+            )
+
+            update_signal_check(signal_id, "check_4h_done")
+
+            try:
+                requests.post(
+                    f"https://api.telegram.org/bot{TOKEN}/sendMessage",
+                    json={
+                        "chat_id": ADMIN_ID,
+                        "text": report_text
+                    },
+                    timeout=10
+                )
+            except Exception as e:
+                print("ADMIN REPORT ERROR:", e)
+
 def get_bot_stats():
     conn = psycopg2.connect(DATABASE_URL)
     cursor = conn.cursor()
@@ -292,138 +424,6 @@ def get_bot_stats():
     conn.close()
 
     return total, buy, no_trade, wait, watchlist
-
-if hours_passed >= 72 and check_72h_done == 0:
-
-    report_text = f"""
-🧠 SELF TEST REPORT
-
-Проверка: 72H
-
-Signal ID: #{signal_id}
-
-Монета:
-{symbol}
-
-Решение:
-{decision}
-
-Результат:
-{result_percent}%
-
-Вердикт:
-{verdict}
-"""
-
-    print(
-        f"72H CHECK | "
-        f"Signal #{signal_id} | "
-        f"{symbol} | "
-        f"{result_percent}% | "
-        f"{verdict}"
-    )
-
-    update_signal_check(signal_id, "check_72h_done")
-
-    try:
-        requests.post(
-            f"https://api.telegram.org/bot{TOKEN}/sendMessage",
-            json={
-                "chat_id": ADMIN_ID,
-                "text": report_text
-            },
-            timeout=10
-        )
-    except Exception as e:
-        print("ADMIN REPORT ERROR:", e)
-
-elif hours_passed >= 24 and check_24h_done == 0:
-
-    report_text = f"""
-🧠 SELF TEST REPORT
-
-Проверка: 24H
-
-Signal ID: #{signal_id}
-
-Монета:
-{symbol}
-
-Решение:
-{decision}
-
-Результат:
-{result_percent}%
-
-Вердикт:
-{verdict}
-"""
-
-    print(
-        f"24H CHECK | "
-        f"Signal #{signal_id} | "
-        f"{symbol} | "
-        f"{result_percent}% | "
-        f"{verdict}"
-    )
-
-    update_signal_check(signal_id, "check_24h_done")
-
-    try:
-        requests.post(
-            f"https://api.telegram.org/bot{TOKEN}/sendMessage",
-            json={
-                "chat_id": ADMIN_ID,
-                "text": report_text
-            },
-            timeout=10
-        )
-    except Exception as e:
-        print("ADMIN REPORT ERROR:", e)
-
-elif hours_passed >= 4 and check_4h_done == 0:
-
-    report_text = f"""
-🧠 SELF TEST REPORT
-
-Проверка: 4H
-
-Signal ID: #{signal_id}
-
-Монета:
-{symbol}
-
-Решение:
-{decision}
-
-Результат:
-{result_percent}%
-
-Вердикт:
-{verdict}
-"""
-
-    print(
-        f"4H CHECK | "
-        f"Signal #{signal_id} | "
-        f"{symbol} | "
-        f"{result_percent}% | "
-        f"{verdict}"
-    )
-
-    update_signal_check(signal_id, "check_4h_done")
-
-    try:
-        requests.post(
-            f"https://api.telegram.org/bot{TOKEN}/sendMessage",
-            json={
-                "chat_id": ADMIN_ID,
-                "text": report_text
-            },
-            timeout=10
-        )
-    except Exception as e:
-        print("ADMIN REPORT ERROR:", e)
                 
 def calculate_ema(closes, period):
     if len(closes) < period:
@@ -2405,14 +2405,6 @@ WATCHLIST:
     )
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-
-    try:
-        await context.bot.send_message(
-            chat_id=ADMIN_ID,
-            text="🧪 TEST ADMIN MESSAGE"
-        )
-    except Exception as e:
-        print("ADMIN TEST ERROR:", e)
     await update.message.reply_text(
         "🤖 Crypto AI Bot запущен.\n\nВыбери действие:",
         reply_markup=main_keyboard()
@@ -2471,41 +2463,32 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         full_text = build_full_analysis(symbol, timeframe)
 
-        if data.startswith("FULL_"):
-            parts = data.split("_")
-            coin = parts[1]
-            timeframe = parts[2]
+        if ADMIN_ID:
+            try:
+                await context.bot.send_message(
+                    chat_id=ADMIN_ID,
+                    text=f"""
+📥 НОВЫЙ АНАЛИЗ
 
-            symbol = coin + "USDT"
+Пользователь:
+{user_id}
 
-            full_text = build_full_analysis(symbol, timeframe)
+Монета:
+{symbol}
 
-            if ADMIN_ID:
-                try:
-                    await context.bot.send_message(
-                        chat_id=ADMIN_ID,
-                        text=f"""
-        📥 НОВЫЙ АНАЛИЗ
+Таймфрейм:
+{timeframe}
+"""
+                )
+            except Exception as e:
+                print("ADMIN SEND ERROR:", e)
 
-        Пользователь:
-        {user_id}
+        await query.message.reply_text(
+            full_text,
+            reply_markup=main_keyboard()
+        )
 
-        Монета:
-        {symbol}
-
-        Таймфрейм:
-        {timeframe}
-        """
-                    )
-                except Exception as e:
-                    print("ADMIN SEND ERROR:", e)
-
-            await query.message.reply_text(
-                full_text,
-                reply_markup=main_keyboard()
-            )
-
-            return      
+        return
 
     if data.startswith("SCALP_"):
         parts = data.split("_")
