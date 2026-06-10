@@ -81,6 +81,60 @@ def init_signal_db():
     conn.commit()
     conn.close()
 
+def save_signal(
+    symbol,
+    timeframe,
+    price,
+    decision,
+    buy_score,
+    trend_score,
+    entry_low,
+    entry_high,
+    stop,
+    tp1,
+    tp2
+):
+    conn = sqlite3.connect("signals.db")
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        INSERT INTO signals (
+            created_at,
+            symbol,
+            timeframe,
+            price,
+            decision,
+            buy_score,
+            trend_score,
+            entry_low,
+            entry_high,
+            stop,
+            tp1,
+            tp2
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        datetime.now().isoformat(),
+        symbol,
+        timeframe,
+        price,
+        decision,
+        buy_score,
+        trend_score,
+        entry_low,
+        entry_high,
+        stop,
+        tp1,
+        tp2
+    ))
+
+    signal_id = cursor.lastrowid
+
+    conn.commit()
+    conn.close()
+
+    return signal_id
+
 def calculate_ema(closes, period):
     if len(closes) < period:
         return closes[-1]
@@ -1179,6 +1233,20 @@ def build_full_analysis(symbol, timeframe):
         timing_now = "🔴 Сейчас не входить"
         timing_next = "Ждать новый сигнал"
         entry_condition = "Вход запрещён, условия слабые"
+
+    signal_id = save_signal(
+        symbol=symbol,
+        timeframe=timeframe,
+        price=price,
+        decision=decision,
+        buy_score=buy_score,
+        trend_score=trend_score,
+        entry_low=entry_low,
+        entry_high=entry_high,
+        stop=stop,
+        tp1=tp1,
+        tp2=tp2
+    )
 
     return f"""
 {symbol} | {timeframe}
