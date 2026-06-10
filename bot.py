@@ -1,3 +1,5 @@
+import sqlite3
+from datetime import datetime, timedelta
 import time
 import os
 import requests
@@ -51,6 +53,33 @@ def calculate_rsi(closes, period=14):
     rs = avg_gain / avg_loss
     return round(100 - (100 / (1 + rs)), 2)
 
+def init_signal_db():
+    conn = sqlite3.connect("signals.db")
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS signals (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            created_at TEXT,
+            symbol TEXT,
+            timeframe TEXT,
+            price REAL,
+            decision TEXT,
+            buy_score REAL,
+            trend_score REAL,
+            entry_low REAL,
+            entry_high REAL,
+            stop REAL,
+            tp1 REAL,
+            tp2 REAL,
+            check_4h_done INTEGER DEFAULT 0,
+            check_24h_done INTEGER DEFAULT 0,
+            check_72h_done INTEGER DEFAULT 0
+        )
+    """)
+
+    conn.commit()
+    conn.close()
 
 def calculate_ema(closes, period):
     if len(closes) < period:
@@ -2671,6 +2700,8 @@ app = ApplicationBuilder().token(TOKEN).build()
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CallbackQueryHandler(button_callback))
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+
+init_signal_db()
 
 print("BOT STARTED")
 
