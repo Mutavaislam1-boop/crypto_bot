@@ -233,11 +233,11 @@ def check_signals():
             current_price
         )
 
-    print(
-        f"Signal #{signal_id} | "
-        f"{symbol} | "
-        f"{result_percent}%"
-    )
+        print(
+            f"Signal #{signal_id} | "
+            f"{symbol} | "
+            f"{result_percent}%"
+        )
         
 def calculate_ema(closes, period):
     if len(closes) < period:
