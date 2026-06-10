@@ -2092,6 +2092,14 @@ def help_inline_keyboard():
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+    try:
+        await context.bot.send_message(
+            chat_id=ADMIN_ID,
+            text="🧪 TEST ADMIN MESSAGE"
+        )
+    except Exception as e:
+        print("ADMIN TEST ERROR:", e)
     await update.message.reply_text(
         "🤖 Crypto AI Bot запущен.\n\nВыбери действие:",
         reply_markup=main_keyboard()
