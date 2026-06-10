@@ -2703,6 +2703,8 @@ app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
 init_signal_db()
 
+print("SIGNAL DATABASE CREATED")
+
 print("BOT STARTED")
 
 app.run_polling()
