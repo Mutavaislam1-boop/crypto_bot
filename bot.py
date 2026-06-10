@@ -153,6 +153,18 @@ def get_unchecked_signals():
             OR check_72h_done = 0
     """)
 
+    cursor.execute("SELECT COUNT(*) FROM signals")
+    print("TOTAL SIGNALS:", cursor.fetchone()[0])
+
+    cursor.execute("""
+        SELECT *
+        FROM signals
+        WHERE
+            check_4h_done = 0
+            OR check_24h_done = 0
+            OR check_72h_done = 0
+    """)
+
     rows = cursor.fetchall()
 
     conn.close()
