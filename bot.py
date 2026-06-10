@@ -258,11 +258,9 @@ def check_signals():
     print(
         f"Signal #{signal_id} | "
         f"{symbol} | "
-        f"{result_percent}% | "
-        f"{verdict}"
-    ) 
-    
-    
+        f"{result_percent}%"
+    )
+        
 def calculate_ema(closes, period):
     if len(closes) < period:
         return closes[-1]
