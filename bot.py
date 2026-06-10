@@ -269,12 +269,38 @@ def check_signals():
             else:
                 verdict = "⚪ NEUTRAL"
 
+    if hours_passed >= 72 and check_72h_done == 0:
         print(
+            f"72H CHECK | "
             f"Signal #{signal_id} | "
             f"{symbol} | "
             f"{result_percent}% | "
             f"{verdict}"
-        ) 
+        )
+
+        update_signal_check(signal_id, "check_72h_done")
+
+    elif hours_passed >= 24 and check_24h_done == 0:
+        print(
+            f"24H CHECK | "
+            f"Signal #{signal_id} | "
+            f"{symbol} | "
+            f"{result_percent}% | "
+            f"{verdict}"
+        )
+
+        update_signal_check(signal_id, "check_24h_done")
+
+    elif hours_passed >= 4 and check_4h_done == 0:
+        print(
+            f"4H CHECK | "
+            f"Signal #{signal_id} | "
+            f"{symbol} | "
+            f"{result_percent}% | "
+            f"{verdict}"
+        )
+
+        update_signal_check(signal_id, "check_4h_done")
                 
 def calculate_ema(closes, period):
     if len(closes) < period:
