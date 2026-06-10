@@ -2183,11 +2183,12 @@ def build_quick_analysis(symbol, timeframe):
     change_emoji = "📈" if change_24h >= 0 else "📉"
 
     return f"""
-📊 ОТЧЁТ ПО РЫНКУ
+🚨🚨🚨 NEW DESIGN TEST 🚨🚨🚨
 
-━━━━━━━━━━━━━━
+<b>HTML WORKING</b>
 
-🪙 Монета:
+Монета:
+
 <b>{symbol}</b>
 
 ⏱ Таймфрейм:
