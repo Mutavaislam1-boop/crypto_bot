@@ -1249,6 +1249,9 @@ def build_full_analysis(symbol, timeframe):
     )
 
     return f"""
+Signal ID:
+#{signal_id}
+
 {symbol} | {timeframe}
 
 ━━━━━━━━━━━━━━
