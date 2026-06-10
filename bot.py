@@ -2150,34 +2150,34 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         full_text = build_full_analysis(symbol, timeframe)
 
-    if ADMIN_ID:
-        try:
-            await context.bot.send_message(
-                chat_id=ADMIN_ID,
-                text=f"""
-    📥 НОВЫЙ АНАЛИЗ
+        if ADMIN_ID:
+            try:
+                await context.bot.send_message(
+                    chat_id=ADMIN_ID,
+                    text=f"""
+        📥 НОВЫЙ АНАЛИЗ
 
-    Пользователь:
-    {user_id}
+        Пользователь:
+        {user_id}
 
-    Монета:
-    {symbol}
+        Монета:
+        {symbol}
 
-    Таймфрейм:
-    {timeframe}
+        Таймфрейм:
+        {timeframe}
 
-    {full_text[:3500]}
-    """
-         )
-        except Exception as e:
-             print("ADMIN SEND ERROR:", e)
+        {full_text[:3500]}
+        """
+            )
+            except Exception as e:
+                print("ADMIN SEND ERROR:", e)
 
-        await query.message.reply_text(
-            full_text,
-            reply_markup=main_keyboard()
-        )
+            await query.message.reply_text(
+                full_text,
+                reply_markup=main_keyboard()
+            )
 
-        return
+            return
 
     if data.startswith("SCALP_"):
         parts = data.split("_")
