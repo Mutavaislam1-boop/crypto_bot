@@ -260,7 +260,7 @@ def check_signals():
         f"{symbol} | "
         f"{result_percent}% | "
         f"{verdict}"
-  ) 
+   ) 
     
     
 def calculate_ema(closes, period):
