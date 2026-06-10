@@ -171,6 +171,64 @@ def update_signal_check(signal_id, field):
     conn.commit()
     conn.close()
 
+def get_current_price(symbol):
+    highs, lows, closes, volumes = get_okx_candles(
+        symbol,
+        "1h",
+        5
+    )
+
+    return closes[-1]
+
+def calculate_signal_result(entry_price, current_price):
+    change_percent = (
+        (current_price - entry_price)
+        / entry_price
+    ) * 100
+
+    return round(change_percent, 2)
+
+def check_signals():
+    signals = get_unchecked_signals()
+
+    for signal in signals:
+
+        signal_id = signal[0]
+        created_at = signal[1]
+
+        symbol = signal[2]
+
+        entry_price = signal[4]
+
+        check_4h_done = signal[13]
+        check_24h_done = signal[14]
+        check_72h_done = signal[15]
+
+        created_dt = datetime.fromisoformat(created_at)
+
+        now = datetime.utcnow()
+
+        hours_passed = (
+            now - created_dt
+        ).total_seconds() / 3600
+
+        try:
+            current_price = get_current_price(symbol)
+
+        except Exception:
+            continue
+
+        result_percent = calculate_signal_result(
+            entry_price,
+            current_price
+        )
+
+        print(
+            f"Signal #{signal_id} | "
+            f"{symbol} | "
+            f"{result_percent}%"
+        )
+
 def calculate_ema(closes, period):
     if len(closes) < period:
         return closes[-1]
@@ -2850,5 +2908,7 @@ init_signal_db()
 print("SIGNAL DATABASE CREATED")
 
 print("BOT STARTED")
+
+check_signals()
 
 app.run_polling()
