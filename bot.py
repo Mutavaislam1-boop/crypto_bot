@@ -2158,11 +2158,20 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         full_text = build_full_analysis(symbol, timeframe)
 
-        if ADMIN_ID:
-            try:
-                await context.bot.send_message(
-                    chat_id=ADMIN_ID,
-                    text=f"""
+        if data.startswith("FULL_"):
+            parts = data.split("_")
+            coin = parts[1]
+            timeframe = parts[2]
+
+            symbol = coin + "USDT"
+
+            full_text = build_full_analysis(symbol, timeframe)
+
+            if ADMIN_ID:
+                try:
+                    await context.bot.send_message(
+                        chat_id=ADMIN_ID,
+                        text=f"""
         📥 НОВЫЙ АНАЛИЗ
 
         Пользователь:
@@ -2173,19 +2182,17 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         Таймфрейм:
         {timeframe}
-
-        {full_text[:3500]}
         """
-            )
-            except Exception as e:
-                print("ADMIN SEND ERROR:", e)
+                    )
+                except Exception as e:
+                    print("ADMIN SEND ERROR:", e)
 
             await query.message.reply_text(
                 full_text,
                 reply_markup=main_keyboard()
             )
 
-            return
+            return      
 
     if data.startswith("SCALP_"):
         parts = data.split("_")
