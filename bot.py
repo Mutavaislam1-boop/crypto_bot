@@ -2183,82 +2183,44 @@ def build_quick_analysis(symbol, timeframe):
     change_emoji = "📈" if change_24h >= 0 else "📉"
 
     return f"""
-🚨🚨🚨 NEW DESIGN TEST 🚨🚨🚨
+<b>📊 Отчёт по рынку</b>
 
-<b>HTML WORKING</b>
-
-Монета:
-
-<b>{symbol}</b>
-
-⏱ Таймфрейм:
-<b>{timeframe.upper()}</b>
-
-💰 Цена:
-<b>{round(price, 4)} USDT</b>
+<b>{symbol}</b> | <code>{timeframe.upper()}</code>
 
 ━━━━━━━━━━━━━━
+<b>🤖 Решение:</b> {decision}
 
-📈 24H ДИАПАЗОН
-
-High:
-<b>{round(high_24h, 4)}</b>
-
-Low:
-<b>{round(low_24h, 4)}</b>
-
-Изменение:
-<b>{round(change_24h, 2)}%</b> {change_emoji}
+<b>💰 Цена:</b> <code>{round(price, 4)} USDT</code>
+<b>📈 High 24ч:</b> <code>{round(high_24h, 4)}</code>
+<b>📉 Low 24ч:</b> <code>{round(low_24h, 4)}</code>
+<b>Изменение:</b> <code>{round(change_24h, 2)}%</code> {change_emoji}
 
 ━━━━━━━━━━━━━━
+<b>📊 Рынок</b>
 
-🤖 РЕШЕНИЕ БОТА
-
-{decision}
-
-━━━━━━━━━━━━━━
-
-📊 СОСТОЯНИЕ РЫНКА
-
-{trend_emoji} Тренд:
-<b>{trend_text}</b>
-
-{btc_emoji} BTC:
-<b>{btc_short}</b>
-
-{volume_emoji} Volume:
-<b>{volume_short}</b>
-
-RSI:
-<b>{rsi}</b>
-
-R/R:
-<b>1:{rr}</b>
+{trend_emoji} Тренд: <b>{trend_text}</b>
+{btc_emoji} BTC: <b>{btc_short}</b>
+{volume_emoji} Volume: <b>{volume_short}</b>
+RSI: <code>{rsi}</code>
+R/R: <code>1:{rr}</code>
 
 ━━━━━━━━━━━━━━
+<b>⚖️ Сигналы</b>
 
-⚖️ БАЛАНС СИГНАЛОВ
-
-🟢 Bull:
-<b>{bullish_percent}%</b>
-
-🔴 Bear:
-<b>{bearish_percent}%</b>
+🟢 Bull: <code>{bullish_percent}%</code>
+🔴 Bear: <code>{bearish_percent}%</code>
 
 ━━━━━━━━━━━━━━
-
-⏱ ТАЙМИНГ
+<b>⏱ Тайминг</b>
 
 {timing_now}
 
-Условие:
+<b>Условие:</b>
 {entry_condition}
 
 ━━━━━━━━━━━━━━
-
-⚠️ Бот не гарантирует прибыль.
-Решение по сделке принимает пользователь.
-"""  
+⚠️ <i>Бот не гарантирует прибыль.</i>
+"""
 
 def get_coingecko_market(symbol):
     now = time.time()
