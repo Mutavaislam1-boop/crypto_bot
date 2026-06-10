@@ -233,12 +233,37 @@ def check_signals():
             current_price
         )
 
+        decision = signal[5]
+
+        if "NO TRADE" in decision:
+
+            if result_percent >= 3:
+                verdict = "❌ BOT MISSED PROFIT"
+
+            elif result_percent <= -3:
+                verdict = "✅ NO TRADE CORRECT"
+
+            else:
+                verdict = "⚪ NEUTRAL"
+
+        else:
+
+            if result_percent >= 3:
+                verdict = "✅ BUY CORRECT"
+
+            elif result_percent <= -3:
+                verdict = "❌ BUY FAILED"
+
+            else:
+                verdict = "⚪ NEUTRAL"
+
         print(
             f"Signal #{signal_id} | "
             f"{symbol} | "
-            f"{result_percent}%"
-        )
-        
+            f"{result_percent}% | "
+            f"{verdict}"
+        ) 
+                
 def calculate_ema(closes, period):
     if len(closes) < period:
         return closes[-1]
