@@ -193,11 +193,15 @@ def calculate_signal_result(entry_price, current_price):
     return round(change_percent, 2)
 
 def check_signals():
+
     print("CHECK SIGNALS STARTED")
+
     signals = get_unchecked_signals()
+
     print("SIGNALS FOUND:", len(signals))
 
     for signal in signals:
+        print(signal)
 
         signal_id = signal[0]
         created_at = signal[1]
