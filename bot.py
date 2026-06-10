@@ -270,6 +270,29 @@ def check_signals():
             else:
                 verdict = "⚪ NEUTRAL"
 
+def get_bot_stats():
+    conn = psycopg2.connect(DATABASE_URL)
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT COUNT(*) FROM signals")
+    total = cursor.fetchone()[0]
+
+    cursor.execute("SELECT COUNT(*) FROM signals WHERE decision LIKE '%NO TRADE%'")
+    no_trade = cursor.fetchone()[0]
+
+    cursor.execute("SELECT COUNT(*) FROM signals WHERE decision LIKE '%BUY%'")
+    buy = cursor.fetchone()[0]
+
+    cursor.execute("SELECT COUNT(*) FROM signals WHERE decision LIKE '%WAIT%'")
+    wait = cursor.fetchone()[0]
+
+    cursor.execute("SELECT COUNT(*) FROM signals WHERE decision LIKE '%WATCHLIST%'")
+    watchlist = cursor.fetchone()[0]
+
+    conn.close()
+
+    return total, buy, no_trade, wait, watchlist
+
 if hours_passed >= 72 and check_72h_done == 0:
 
     report_text = f"""
@@ -2357,6 +2380,29 @@ def help_inline_keyboard():
         ]
     )
 
+async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    total, buy, no_trade, wait, watchlist = get_bot_stats()
+
+    await update.message.reply_text(
+        f"""
+📊 BOT STATS
+
+Всего сигналов:
+{total}
+
+BUY:
+{buy}
+
+NO TRADE:
+{no_trade}
+
+WAIT:
+{wait}
+
+WATCHLIST:
+{watchlist}
+"""
+    )
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
@@ -3075,6 +3121,7 @@ async def auto_check_signals(context: ContextTypes.DEFAULT_TYPE):
 app = ApplicationBuilder().token(TOKEN).build()
 
 app.add_handler(CommandHandler("start", start))
+app.add_handler(CommandHandler("stats", stats_command))
 app.add_handler(CallbackQueryHandler(button_callback))
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
