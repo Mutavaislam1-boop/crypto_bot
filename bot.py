@@ -114,6 +114,61 @@ def save_signal(
         )
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
+        datetime.utcnow().isoformat(),
+        symbol,
+        timeframe,
+        price,
+        decision,
+        buy_score,
+        trend_score,
+        entry_low,
+        entry_high,
+        stop,
+        tp1,
+        tp2
+    ))
+
+    signal_id = cursor.lastrowid
+
+    conn.commit()
+
+    conn.close()
+
+    return signal_id
+
+def save_signal(
+    symbol,
+    timeframe,
+    price,
+    decision,
+    buy_score,
+    trend_score,
+    entry_low,
+    entry_high,
+    stop,
+    tp1,
+    tp2
+):
+    conn = sqlite3.connect("signals.db")
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        INSERT INTO signals (
+            created_at,
+            symbol,
+            timeframe,
+            price,
+            decision,
+            buy_score,
+            trend_score,
+            entry_low,
+            entry_high,
+            stop,
+            tp1,
+            tp2
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
         datetime.now().isoformat(),
         symbol,
         timeframe,
