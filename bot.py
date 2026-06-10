@@ -136,59 +136,40 @@ def save_signal(
 
     return signal_id
 
-def save_signal(
-    symbol,
-    timeframe,
-    price,
-    decision,
-    buy_score,
-    trend_score,
-    entry_low,
-    entry_high,
-    stop,
-    tp1,
-    tp2
-):
+def get_unchecked_signals():
     conn = sqlite3.connect("signals.db")
     cursor = conn.cursor()
 
     cursor.execute("""
-        INSERT INTO signals (
-            created_at,
-            symbol,
-            timeframe,
-            price,
-            decision,
-            buy_score,
-            trend_score,
-            entry_low,
-            entry_high,
-            stop,
-            tp1,
-            tp2
-        )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    """, (
-        datetime.now().isoformat(),
-        symbol,
-        timeframe,
-        price,
-        decision,
-        buy_score,
-        trend_score,
-        entry_low,
-        entry_high,
-        stop,
-        tp1,
-        tp2
-    ))
+        SELECT *
+        FROM signals
+        WHERE
+            check_4h_done = 0
+            OR check_24h_done = 0
+            OR check_72h_done = 0
+    """)
 
-    signal_id = cursor.lastrowid
+    rows = cursor.fetchall()
+
+    conn.close()
+
+    return rows
+
+def update_signal_check(signal_id, field):
+    conn = sqlite3.connect("signals.db")
+    cursor = conn.cursor()
+
+    cursor.execute(
+        f"""
+        UPDATE signals
+        SET {field}=1
+        WHERE id=?
+        """,
+        (signal_id,)
+    )
 
     conn.commit()
     conn.close()
-
-    return signal_id
 
 def calculate_ema(closes, period):
     if len(closes) < period:
