@@ -2183,6 +2183,7 @@ def build_quick_analysis(symbol, timeframe):
     change_emoji = "📈" if change_24h >= 0 else "📉"
 
     return f"""
+    <pre>
 <b>📊 Отчёт по рынку</b>
 
 <b>{symbol}</b> | <code>{timeframe.upper()}</code>
@@ -2220,6 +2221,7 @@ R/R: <code>1:{rr}</code>
 
 ━━━━━━━━━━━━━━
 ⚠️ <i>Бот не гарантирует прибыль.</i>
+    </pre>
 """
 
 def get_coingecko_market(symbol):
