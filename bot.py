@@ -82,7 +82,6 @@ def init_signal_db():
     conn.close()
 
 def save_signal(
-    print("SAVE SIGNAL CALLED")    
     symbol,
     timeframe,
     price,
@@ -95,6 +94,8 @@ def save_signal(
     tp1,
     tp2
 ):
+    print("SAVE SIGNAL CALLED")   
+
     conn = sqlite3.connect("signals.db")
     cursor = conn.cursor()
 
