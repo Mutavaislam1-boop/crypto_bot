@@ -1,5 +1,6 @@
 import psycopg2
 from psycopg2.extras import RealDictCursor
+from telegram.ext import JobQueue
 import sqlite3
 from datetime import datetime, timedelta
 import time
@@ -269,38 +270,137 @@ def check_signals():
             else:
                 verdict = "⚪ NEUTRAL"
 
-    if hours_passed >= 72 and check_72h_done == 0:
-        print(
-            f"72H CHECK | "
-            f"Signal #{signal_id} | "
-            f"{symbol} | "
-            f"{result_percent}% | "
-            f"{verdict}"
+if hours_passed >= 72 and check_72h_done == 0:
+
+    report_text = f"""
+🧠 SELF TEST REPORT
+
+Проверка: 72H
+
+Signal ID: #{signal_id}
+
+Монета:
+{symbol}
+
+Решение:
+{decision}
+
+Результат:
+{result_percent}%
+
+Вердикт:
+{verdict}
+"""
+
+    print(
+        f"72H CHECK | "
+        f"Signal #{signal_id} | "
+        f"{symbol} | "
+        f"{result_percent}% | "
+        f"{verdict}"
+    )
+
+    update_signal_check(signal_id, "check_72h_done")
+
+    try:
+        requests.post(
+            f"https://api.telegram.org/bot{TOKEN}/sendMessage",
+            json={
+                "chat_id": ADMIN_ID,
+                "text": report_text
+            },
+            timeout=10
         )
+    except Exception as e:
+        print("ADMIN REPORT ERROR:", e)
 
-        update_signal_check(signal_id, "check_72h_done")
+elif hours_passed >= 24 and check_24h_done == 0:
 
-    elif hours_passed >= 24 and check_24h_done == 0:
-        print(
-            f"24H CHECK | "
-            f"Signal #{signal_id} | "
-            f"{symbol} | "
-            f"{result_percent}% | "
-            f"{verdict}"
+    report_text = f"""
+🧠 SELF TEST REPORT
+
+Проверка: 24H
+
+Signal ID: #{signal_id}
+
+Монета:
+{symbol}
+
+Решение:
+{decision}
+
+Результат:
+{result_percent}%
+
+Вердикт:
+{verdict}
+"""
+
+    print(
+        f"24H CHECK | "
+        f"Signal #{signal_id} | "
+        f"{symbol} | "
+        f"{result_percent}% | "
+        f"{verdict}"
+    )
+
+    update_signal_check(signal_id, "check_24h_done")
+
+    try:
+        requests.post(
+            f"https://api.telegram.org/bot{TOKEN}/sendMessage",
+            json={
+                "chat_id": ADMIN_ID,
+                "text": report_text
+            },
+            timeout=10
         )
+    except Exception as e:
+        print("ADMIN REPORT ERROR:", e)
 
-        update_signal_check(signal_id, "check_24h_done")
+elif hours_passed >= 4 and check_4h_done == 0:
 
-    elif hours_passed >= 4 and check_4h_done == 0:
-        print(
-            f"4H CHECK | "
-            f"Signal #{signal_id} | "
-            f"{symbol} | "
-            f"{result_percent}% | "
-            f"{verdict}"
+    report_text = f"""
+🧠 SELF TEST REPORT
+
+Проверка: 4H
+
+Signal ID: #{signal_id}
+
+Монета:
+{symbol}
+
+Решение:
+{decision}
+
+Результат:
+{result_percent}%
+
+Вердикт:
+{verdict}
+"""
+
+    print(
+        f"4H CHECK | "
+        f"Signal #{signal_id} | "
+        f"{symbol} | "
+        f"{result_percent}% | "
+        f"{verdict}"
+    )
+
+    update_signal_check(signal_id, "check_4h_done")
+
+    try:
+        requests.post(
+            f"https://api.telegram.org/bot{TOKEN}/sendMessage",
+            json={
+                "chat_id": ADMIN_ID,
+                "text": report_text
+            },
+            timeout=10
         )
-
-        update_signal_check(signal_id, "check_4h_done")
+    except Exception as e:
+        print("ADMIN REPORT ERROR:", e)
                 
 def calculate_ema(closes, period):
     if len(closes) < period:
@@ -2969,12 +3069,20 @@ Amount:
 
         user_state.pop(user_id, None)
 
+async def auto_check_signals(context: ContextTypes.DEFAULT_TYPE):
+    check_signals()
 
 app = ApplicationBuilder().token(TOKEN).build()
 
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CallbackQueryHandler(button_callback))
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+
+app.job_queue.run_repeating(
+    auto_check_signals,
+    interval=900,
+    first=60
+)
 
 init_signal_db()
 
